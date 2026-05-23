@@ -1,0 +1,3 @@
+[alias]
+# LInux alias release statiic.
+static-release = "build --release --target x86_64-unknown-linux-musl"
