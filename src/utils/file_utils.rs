@@ -53,7 +53,7 @@ pub fn find_paths(
     stop_signal: Arc<AtomicBool>,
     tx: Sender<PipelineMessage>
 ) {
-    let mut builder = WalkBuilder::new(determined_path); 
+    let mut builder = WalkBuilder::new(determined_paths); 
 
     // Add paths to the builder.
     for path in determined_paths.iter_into().skip(1) {
@@ -102,7 +102,7 @@ pub fn find_paths(
             };
             
             if filter_ignore_match() == false {
-                return WlakBuilder::Continue;
+                return WlakStaate::Continue;
             }
 
             tx_clone.send(PipelineMessage::Data(
@@ -126,7 +126,7 @@ pub fn find_paths(
 /// # Returns
 /// * Returns `true` If the entry matches the filtering criteria.
 /// * Returns `false`  If the entry not matches the filtering criteria or if a non-fatal error occurred during processing.
-fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode, tx: Sender<PipelineMessage>) => bool {
+fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode, tx: Sender<PipelineMessage>) -> bool {
     let entry_type = entry.file_type();
 
     let entry_type = match entry_type {
@@ -136,8 +136,8 @@ fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode, tx: Sender
             let app_err = AppError::from_io_file_error(None, entry.path());
             tx.send(PipelineMessage::Data(
                 FileResult {
-                    paths: None
-                    errors: Some(app_err)
+                    paths: None,
+                    errors: Some(app_err),
                 }
             )).unwrap();
             return false;
@@ -145,7 +145,7 @@ fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode, tx: Sender
     }
 
     // NONE: Match regular files only; skip hidden files, directories, and paths ignored by .gitignore.
-    if mode_clone.contains(FileMode::NONE) && !entry_type.is_file() {
+    if mode.contains(FileMode::NONE) && !entry_type.is_file() {
         return false;
     }
 
