@@ -25,8 +25,8 @@ use thiserror;
 #[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic)]
 #[error("File error at {path:#?} : {Error_type}")]
 pub FileOperationError {
-    error_type: FileError,
-    path: PathBuf,
+    error_type: Option<FileError>,
+    path: Option<PathBuf>,
 }
 
 /// File-related error types.
@@ -77,4 +77,8 @@ pub enum FileError {
     /// Generic input/output error with a descriptive message.
     #[error("IO Error")]
     IOError(String),
+
+    /// Is a None Error.
+    #[error("The error is None")]
+    NoneErrro,
 }

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-self::File(
+
 //! Converts `std::io::Error` into a custom error enum.
 
 #![forbid(warnings)]
@@ -30,12 +30,21 @@ static DISK_MANAGER: Lazy<Disk> = Lazy::new(|| {Disks::new_with_refreshed_list()
 
 
 /// Converts a standard std::io::Error into an enriched AppError.
-pub fn from_io_file_error(err: std::io::Error, path: PathBuf) -> FileOperationError {
+pub fn from_io_file_error(err: Option<std::io::Error>, path: PathBuf) -> FileOperationError {
     #[cfg(feature = "logging")]
     let path_for_log = path.clone();
 
-    // The file not found.
+    let err = match err {
+        Some(error) => error,
+
+        None => return FileOperationErrro {
+            errors: Some(FileError::NoneError),
+            path: None
+        }
+    }
+
     let error_type = match err.kind() {
+      // The file not found.
         std::io::ErrorKind::NotFound => {
             if let Some(parent) = path.parent() {
                 if parent.exists() {
@@ -68,7 +77,7 @@ pub fn from_io_file_error(err: std::io::Error, path: PathBuf) -> FileOperationEr
 
         // Insufficient permissions
         std::io::ErrorKind::PermissionDenied =>
-            FileError::PermissionDenied,
+            FileError::PermissionDenied),
 
         // Path contains illegal characters or is malformed.
         std::io::ErrorKind::InvalidInput =>
@@ -86,7 +95,10 @@ pub fn from_io_file_error(err: std::io::Error, path: PathBuf) -> FileOperationEr
             FileError::NotADirectory,
 
         // Fallback: capture generic system error with path context.
-         _ => FileError::IOError(err.to_string()),
+        _ => FileError::IOError(err.to_string(),
+
+        // Is a None error.
+        None => FileError::NoneError,
     }
 
 #[cfg(feature = "logging")]
@@ -99,5 +111,5 @@ pub fn from_io_file_error(err: std::io::Error, path: PathBuf) -> FileOperationEr
     );
 }
     
-FileOperationError {error_type, path }
+FileOperationError {Some(error_type), Some(path)}
 }

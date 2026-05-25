@@ -26,7 +26,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use ignore::{WalkBuilder, walk, DirEntry};
-use crossbeam_channel::unbounded;
+use crossbeam_channel::bounded;
 
 use crate::types::FileError;
 use crate::types::SafetyLevel;
@@ -38,7 +38,7 @@ use crate::types::PipelineMessage;
 ///
 /// # Arguments
 /// * `path`      - Target path to search.
-/// * `file_name` - Target filename to search
+/// * `name` - Target filename to search
 /// * `mode`      - Configuration flags for the search mode.
 ///
 /// # Returns
@@ -46,15 +46,15 @@ use crate::types::PipelineMessage;
 /// * along with any non-fatal errors encountered during processing. 
 pub fn find_paths(
     determined_paths: Vec<PathBuf>,
-    file_name: &str,
+    name: &str,
     mode: FileMode,
     stop_signal: Arc<AtomicBool>,
     tx: Sender<PipelineMessage>
 ) {
-    let mut builder = walkbuilder::new(path); 
+    let mut builder = WalkBuilder::new(determined_path); 
 
     // Add paths to the builder.
-    for path in determined_paths.skip(1) {
+    for path in determined_paths.iter_into().skip(1) {
          builder.add(path);
     }
 
@@ -75,10 +75,10 @@ pub fn find_paths(
     let parallel_walker = builder.build_parallel();
  
     parallel_walker.visit(&mut || {
-        let stop_signal_clone = stop_signal.Arc::clone(&stop_signal);
+        let stop_signal_clone = Arc::clone(&stop_signal);
         let tx_clone = tx.clone();
         let mode_clone = mode.clone();
-        let file_name_string = file_name.to_string();
+        let name_string = name.to_string();
 
         Box::new(move |result_path| {
             if stop_signal.load(Ordering::Relaxed) {
@@ -86,7 +86,7 @@ pub fn find_paths(
             }
 
             let Ok(entry) = result_path else {
-                let err = resultpath.unwrap_err();
+                let err = result_path.unwrap_err();
                 let err_path = err.path().map(|path| path.to_path_buf().unwrap_or_default());
                 let app_err = AppError::from_io_file_error(std::io::Error::from(err), err_path);
 
@@ -99,38 +99,8 @@ pub fn find_paths(
                 return WalkState::Continue;
             };
             
-            // NONE: Match regular files only; skip hidden files, directories, and paths ignored by .gitignore.
-            if mode_clone.contains(FileMode::NONE) {
-                if entry.file_type().map_or(true, |file_kind| !file_kind.is_file()) {
-                     return WalkState::Continue;
-                }
-            }
-
-            // WITH_DIR: Match directories only; exclude regular and hidden files.
-            if mode_clone.contains(FileMode::WITH_DIR) {
-                if !entry.file_type.map_or(true, |file_kind| file_kind.is_dir()) {
-                    return WalkState::Continue;
-                } 
-            }
-
-            // FUZZY: Match files by stem name.
-            if mode_clone.contains(FileMode::FUZZY) {
-                let current_stem = entry.file_stem().to_string_lossy();
-                if file_name != current_stem {
-                    return WalkState::Continue;
-                }
-            }
-
-            // CASE_INSENSITIVE: Perform case-insensitive filename comparison.
-            let current_name = entry.file_name.to_string_lossy();
-            if mode_clone.contains(FileMode::CASE_INSENSITIVE) {
-                if file_name.to_lowercase() != current_name.to_lowercase() {
-                    return WalkState::Continue;
-                }
-            } else {
-                if file_name != current_name {
-                    return WalkState::Continue;
-                }
+            if filter_ignore_match() == false {
+                return WlakBuilder::Continue;
             }
 
             tx_clone.send(PipelineMessage::Data(
@@ -140,4 +110,74 @@ pub fn find_paths(
                 })).unwrap();
         });
     }
+}
+
+fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode, tx: Sender<PipelineMessage>) => bool {
+    let entry_type = entry.file_type();
+
+    // NONE: Match regular files only; skip hidden files, directories, and paths ignored by .gitignore.
+    if mode_clone.contains(FileMode::NONE) {
+        match entry_type {
+            Some(ent_type) => {
+                if ent_type.map(|file_kind| !file_kind.is_file()) {
+                    return false;
+                }
+            }
+
+            None => {
+                let app_err = AppError::from_io_file_error(None, entry.path());
+                tx.send(PipelineMessage::Data(
+                    FileResult {
+                        paths: None
+                        errors: Some(app_err)
+                    }
+                )).unwrap();
+                return false;
+            }
+        }
+    }
+
+    // WITH_DIR: Match directories only; exclude regular and hidden files.
+    if mode.contains(FileMode::WITH_DIR) {
+         match entry_type {
+            Some(ent_type) => {
+                if ent_type.map(|file_kind| !file_kind.is_dir()) {
+                    return false;
+                }
+            }
+
+            None => {
+                let app_err = AppError::from_io_file_error(None, entry.path());
+                tx.send(PipelineMessage::Data(
+                    FileResult {
+                        paths: None
+                        errors: Some(app_err)
+                    }
+                )).unwrap();
+                return false;
+            }
+        }
+    }
+
+    // FUZZY: Match files by stem name.
+    if mode.contains(FileMode::FUZZY) {
+        let current_stem = entry.file_stem().to_string_lossy();
+        if name != current_stem {
+            return false;
+        }
+    }
+
+    // CASE_INSENSITIVE: Perform case-insensitive filename comparison.
+    let current_name = entry.file_name().to_string_lossy();
+    if mode.contains(FileMode::CASE_INSENSITIVE) {
+        if name.to_lowercase() != current_name.to_lowercase() {
+            return false;
+        }
+    } else {
+        if name != current_name {
+            return false;
+        }
+    }
+
+true
 }
