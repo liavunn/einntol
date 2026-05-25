@@ -46,15 +46,17 @@ fn main() -> miette::Result<()> {
             let unchecked_paths = get_unchecked_paths_cli();
 
             match unchecked_paths.errors {
-                Some(errors) if errors.is_empty() => 
+                Some(errors) if !errors.is_empty() => 
                     for unchecked_path in errors.iter {
-                        println!("");
+                        println!("{}", unchecked_path);
                     },
 
                 _ => println!("");,
             }
-                    
-            scan_and_find()
+
+            match unchecked_paths.paths {
+                Some()scan_and_find(unchecked_paths)
+            }
         }}
     })
 

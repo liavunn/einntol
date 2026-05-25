@@ -55,48 +55,7 @@ pub fn find_paths(
 
     // Add paths to the builder.
     for path in determined_paths.skip(1) {
-/// Gets the path from user input.
-///
-/// # Arguments
-/// * `input_vec_path` - A vector of paths to be validated and processed.
-///
-/// # Returns
-/// * Returns a FileResult containing successfully validated and normalized paths,
-/// * along with any non-fatal errors encountered during processing. 
-pub fn scan_and_find(input_vec_path: Vec<PathBuf>, tx: Sender<PipelineMessage>) { 
-    let mut pending_paths = Vec::with_capacity(64);
-
-    for input_path in input_vec_path.into_iter() {
-        if pending_paths.len() == 64 {
-            tx.send(PipelineMessage::Singnal(PipelineStatus::Pregress));
-            find_paths(pending_paths);
-            pending_paths = Vec::with_capacity(64);
-        }
-
-        let path_status = std::fs::metadata(&input_path)
-            .map(|_| input_path)
-
-        let Ok(current_path) = path_status else {
-            let err = path_status.unwarp_err();
-            let app_err = AppError::from_io_file_error(err, input_path);
-            tx.send(PipelineMessage::Data(
-                FileResult {
-                    path: None,
-                    error: app_err
-                })).unwarp();
-
-            continue;
-        }
-
-        pending_paths.push(current_path)
-    }
-
-    if !pending_paths.is_empty() {
-        tx.send(PipelineMessage::Singnal(PipelineStatus::Pregress));
-        find_paths(pending_paths);
-    }
-}
-        builder.add(path);
+         builder.add(path);
     }
 
     // Check if hidden files should be included.
@@ -111,54 +70,10 @@ pub fn scan_and_find(input_vec_path: Vec<PathBuf>, tx: Sender<PipelineMessage>) 
         Some(3)
     };
 
-    builder = builder.max_depth(3);
-
-    let mut final_paths: Vec<PathBuf> = Vec::new();
-    let mut paths_errors: Vec<AppError> = Vec::new();
+    builder = builder.max_depth(depth);
 
     let parallel_walker = builder.build_parallel();
-/// Gets the path from user input.
-///
-/// # Arguments
-/// * `input_vec_path` - A vector of paths to be validated and processed.
-///
-/// # Returns
-/// * Returns a FileResult containing successfully validated and normalized paths,
-/// * along with any non-fatal errors encountered during processing. 
-pub fn scan_and_find(input_vec_path: Vec<PathBuf>, tx: Sender<PipelineMessage>) { 
-    let mut pending_paths = Vec::with_capacity(64);
-
-    for input_path in input_vec_path.into_iter() {
-        if pending_paths.len() == 64 {
-            tx.send(PipelineMessage::Singnal(PipelineStatus::Pregress));
-            find_paths(pending_paths);
-            pending_paths = Vec::with_capacity(64);
-        }
-
-        let path_status = std::fs::metadata(&input_path)
-            .map(|_| input_path)
-
-        let Ok(current_path) = path_status else {
-            let err = path_status.unwarp_err();
-            let app_err = AppError::from_io_file_error(err, input_path);
-            tx.send(PipelineMessage::Data(
-                FileResult {
-                    paths: None,
-                    errors: app_err
-                })).unwarp();
-
-            continue;
-        }
-
-        pending_paths.push(current_path)
-    }
-
-    if !pending_paths.is_empty() {
-        tx.send(PipelineMessage::Singnal(PipelineStatus::Pregress));
-        find_paths(pending_paths);
-    }
-}
-
+ 
     parallel_walker.visit(&mut || {
         let stop_signal_clone = stop_signal.Arc::clone(&stop_signal);
         let tx_clone = tx.clone();
