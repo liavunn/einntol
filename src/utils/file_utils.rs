@@ -37,9 +37,11 @@ use crate::types::PipelineMessage;
 /// Find files in the input path that match the specified pattern and filename.
 ///
 /// # Arguments
-/// * `path`      - Target path to search.
-/// * `name` - Target filename to search
-/// * `mode`      - Configuration flags for the search mode.
+/// * `determined_path` - Target path to search.
+/// * `name`            - Target filename to search.
+/// * `mode`            - Configuration flags for the search mode.
+/// * `stop_signal`     - Atomic flag for cancellation.
+/// * `tx`              - Transmit results and status updates to the caller.
 ///
 /// # Returns
 /// * Returns a FileResult containing successfully validated and normalized paths,
@@ -112,51 +114,44 @@ pub fn find_paths(
     }
 }
 
+/// Validates file entries based on user-defined filtering modes.
+/// While reporting error states to the pipeline in the event of missing metadata.
+///
+/// # Arguments
+/// * `entry` - The file entry object provided by the ignore crate.
+/// * `name`  - Target filename to search.
+/// * `mode`  - Configuration flags for the search mode.
+/// * `tx`    - transmit results and status updates to the caller.
+///
+/// # Returns
+/// * Returns `true` If the entry matches the filtering criteria.
+/// * Returns `false`  If the entry not matches the filtering criteria or if a non-fatal error occurred during processing.
 fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode, tx: Sender<PipelineMessage>) => bool {
     let entry_type = entry.file_type();
 
-    // NONE: Match regular files only; skip hidden files, directories, and paths ignored by .gitignore.
-    if mode_clone.contains(FileMode::NONE) {
-        match entry_type {
-            Some(ent_type) => {
-                if ent_type.map(|file_kind| !file_kind.is_file()) {
-                    return false;
-                }
-            }
+    let entry_type = match entry_type {
+        Some(ent_type) => ent_type,
 
-            None => {
-                let app_err = AppError::from_io_file_error(None, entry.path());
-                tx.send(PipelineMessage::Data(
-                    FileResult {
-                        paths: None
-                        errors: Some(app_err)
-                    }
-                )).unwrap();
-                return false;
-            }
+        None => {
+            let app_err = AppError::from_io_file_error(None, entry.path());
+            tx.send(PipelineMessage::Data(
+                FileResult {
+                    paths: None
+                    errors: Some(app_err)
+                }
+            )).unwrap();
+            return false;
         }
     }
 
-    // WITH_DIR: Match directories only; exclude regular and hidden files.
-    if mode.contains(FileMode::WITH_DIR) {
-         match entry_type {
-            Some(ent_type) => {
-                if ent_type.map(|file_kind| !file_kind.is_dir()) {
-                    return false;
-                }
-            }
+    // NONE: Match regular files only; skip hidden files, directories, and paths ignored by .gitignore.
+    if mode_clone.contains(FileMode::NONE) && !entry_type.is_file() {
+        return false;
+    }
 
-            None => {
-                let app_err = AppError::from_io_file_error(None, entry.path());
-                tx.send(PipelineMessage::Data(
-                    FileResult {
-                        paths: None
-                        errors: Some(app_err)
-                    }
-                )).unwrap();
-                return false;
-            }
-        }
+    // WITH_DIR: Match directories only; exclude regular and hidden files.
+    if mode.contains(FileMode::WITH_DIR) && !entry_type.is_dir() {
+        return false;
     }
 
     // FUZZY: Match files by stem name.
@@ -169,14 +164,10 @@ fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode, tx: Sender
 
     // CASE_INSENSITIVE: Perform case-insensitive filename comparison.
     let current_name = entry.file_name().to_string_lossy();
-    if mode.contains(FileMode::CASE_INSENSITIVE) {
-        if name.to_lowercase() != current_name.to_lowercase() {
-            return false;
-        }
-    } else {
-        if name != current_name {
-            return false;
-        }
+    if mode.contains(FileMode::CASE_INSENSITIVE) && name.to_lowercase() != current_name.to_lowercase() {
+        return false;
+    } else if name != current_name {
+        return false;
     }
 
 true
