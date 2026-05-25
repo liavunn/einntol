@@ -45,10 +45,10 @@ use crate::types::PipelineMessage;
 /// * Returns a FileResult containing successfully validated and normalized paths,
 /// * along with any non-fatal errors encountered during processing. 
 pub fn find_paths(
-    determined_paths: vec<PathBuf>,
+    determined_paths: Vec<PathBuf>,
     file_name: &str,
     mode: FileMode,
-    stop_signal: Arc<AtomicBool>
+    stop_signal: Arc<AtomicBool>,
     tx: Sender<PipelineMessage>
 ) {
     let mut builder = walkbuilder::new(path); 
@@ -86,9 +86,9 @@ pub fn find_paths(
             }
 
             let Ok(entry) = result_path else {
-                let err = result.unwrap_err();
+                let err = resultpath.unwrap_err();
                 let err_path = err.path().map(|path| path.to_path_buf().unwrap_or_default());
-                let app_err = AppError::from_io_file_error(std::io:Error::from(err), err_path);
+                let app_err = AppError::from_io_file_error(std::io::Error::from(err), err_path);
 
                 tx.send(PipelineMessage::Data(
                     FileResult {
@@ -136,7 +136,7 @@ pub fn find_paths(
             tx_clone.send(PipelineMessage::Data(
                 FileResult {
                     paths: Some(entry.path().to_path_buf()),
-                    Errors: None,
+                    errors: None,
                 })).unwrap();
         });
     }
