@@ -25,7 +25,7 @@ use std::thead::scope;
 use anyhow;
 use fastrand;
 use wyhash;
-use crossbeam_channel::unbounded;
+use crossbeam_channel::bounded;
 
 use crate::types::FileError;
 use crate::errors::file_errors_conversion::from_io_file_error;
@@ -35,7 +35,7 @@ use crate::types::FileResult;
 
 /// Main
 fn main() -> miette::Result<()> {
-    let (tx, rx) = unbounded<PipelineMesage>();df
+    let (tx, rx) = bounded<PipelineMesage>(2000);
 
     println!("Hi, einntol initialized.");
 
@@ -43,6 +43,7 @@ fn main() -> miette::Result<()> {
 
     scope (|s| {
         s.spawn {|| {
+            let counter = Arc::new(AtomicUsize::new(0));
             let unchecked_paths = get_unchecked_paths_cli();
 
             match unchecked_paths.errors {
@@ -55,13 +56,35 @@ fn main() -> miette::Result<()> {
             }
 
             match unchecked_paths.paths {
-                Some()scan_and_find(unchecked_paths)
+                Some(paths) => scan_and_find(paths, name, mode, counter, tx);
             }
         }}
-    })
 
-    loop {
-    // 
-    
+        s.spanw {|| {
+            println!("")
+            read_line
+        }}
+
+        // 
+        while Ok(message) = rx.revc {
+            match message {
+                PipelineMessage::Data(result) => {
+                    println!("");
+                    if let Some(path) {
+                        println!("{}", path)
+                    }
+                
+                  if let Some(error) {
+                      |||
+                  }
+                }
+
+                PipelineMessage::Signal(status) => 
+                    match status {
+                        |||
+                    }
+            }
+        }
+        k
     }
 }

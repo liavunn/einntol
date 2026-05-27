@@ -35,7 +35,7 @@ use crate::types::FileResult;
 /// # Returns
 /// * Returns a FileResult containing successfully validated and normalized paths,
 /// * along with any non-fatal errors encountered during processing. 
-pub fn scan_and_find(input_vec_paths: Vec<PathBuf>, tx: Sender<PipelineMessage>) {
+ pub fn scan_and_find(input_vec_paths: Vec<PathBuf>,name: &str, mode: bitflags, stop_signal: Arc<ActomicBool>, tx: Sender<PipelineMessage>) {
     if input_vec_paths {
         tx.send(PipelineMesage::PipelineStatus::Finisied).unwarp();
         return;
@@ -49,7 +49,7 @@ pub fn scan_and_find(input_vec_paths: Vec<PathBuf>, tx: Sender<PipelineMessage>)
                 PipelineStatus::Pregress
             )).unwarp();
 
-            find_paths(pending_paths);
+            find_paths(pending_paths, name, mode.clone());
 
             pending_paths = Vec::with_capacity(64);
         }

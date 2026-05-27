@@ -32,7 +32,61 @@ use crate::types::FileError;
 use crate::types::SafetyLevel;
 use crate::types::FileMode;
 use crate::types::FileResult;
-use crate::types::PipelineMessage; 
+use crate::types::PipelineMessage;
+
+struct FileVisitor {
+    name: String,
+    mode: FileMode,
+    stop_signal: Arc<AtomicBool>,
+    tx: Sender<PipelineMessage>
+}
+
+impl ParallelVisitor for FileVisitor {
+    fn visit(&mut self, entry: Result<DirEntry, ignore::Error>) -> WalkState {
+        if self.stop_signal.load(Ordering::Relaxed) {
+            return WalkState::Quit;
+        }
+
+        let Ok(entry) = result_path else {
+            let err = result_path.unwrap_err();
+            let err_path = err.path().map(|path| path.to_path_buf().unwrap_or_default());
+            let app_err = AppError::from_io_file_error(std::io::Error::from(err), err_path);
+
+            self.tx.send(PipelineMessage::Data(
+                FileResult {
+                    paths: None,
+                    errors: Some(app_err),
+                })).unwrap();
+
+            return WalkState::Continue;
+        };
+            
+        match filter_ignore_match(&entry, &self.name, &self.mode) {
+            Ok(is_match) => {
+                if is_match {
+                    self.tx.send(PipelineMessage::Data(
+                    FileResult {
+                        paths: Some(entry.path().to_path_buf()),
+                        errors: None,
+                    })).unwrap();
+                }
+            }
+
+            Err(app_err) => {
+                self.tx.send(PipelineMessage::Data(
+                FileResult {
+                    paths: None,
+                    errors: Some(app_err),
+                })).unwrap();
+            }
+
+        return WalkStaate::Continue;        
+    }
+
+    fn finished(&mut self, state: WalkState) {
+        self.tx.send(PipelineMessage::signal::Finished).unwrap();
+    }
+}
 
 /// Find files in the input path that match the specified pattern and filename.
 ///
@@ -76,41 +130,15 @@ pub fn find_paths(
 
     let parallel_walker = builder.build_parallel();
  
-    parallel_walker.visit(&mut || {
-        let stop_signal_clone = Arc::clone(&stop_signal);
-        let tx_clone = tx.clone();
-        let mode_clone = mode.clone();
-        let name_string = name.to_string();
+    parallel_walker.visit(|| {
+        FileVisitor {
+            stop_signal: Arc::clone(&stop_signal);
+            tx: tx.clone();
+            mode: mode.clone();
+            name: name.to_string();
+        }
 
-        Box::new(move |result_path| {
-            if stop_signal.load(Ordering::Relaxed) {
-                return WalkState::Quit;
-            }
 
-            let Ok(entry) = result_path else {
-                let err = result_path.unwrap_err();
-                let err_path = err.path().map(|path| path.to_path_buf().unwrap_or_default());
-                let app_err = AppError::from_io_file_error(std::io::Error::from(err), err_path);
-
-                tx.send(PipelineMessage::Data(
-                    FileResult {
-                        paths: None,
-                        errors: Some(app_err),
-                    })).unwrap();
-
-                return WalkState::Continue;
-            };
-            
-            if filter_ignore_match() == false {
-                return WlakStaate::Continue;
-            }
-
-            tx_clone.send(PipelineMessage::Data(
-                FileResult {
-                    paths: Some(entry.path().to_path_buf()),
-                    errors: None,
-                })).unwrap();
-        });
     }
 }
 
@@ -126,7 +154,7 @@ pub fn find_paths(
 /// # Returns
 /// * Returns `true` If the entry matches the filtering criteria.
 /// * Returns `false`  If the entry not matches the filtering criteria or if a non-fatal error occurred during processing.
-fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode, tx: Sender<PipelineMessage>) -> bool {
+fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode) -> Result<bool, AppError> {
     let entry_type = entry.file_type();
 
     let entry_type = match entry_type {
@@ -134,41 +162,35 @@ fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode, tx: Sender
 
         None => {
             let app_err = AppError::from_io_file_error(None, entry.path());
-            tx.send(PipelineMessage::Data(
-                FileResult {
-                    paths: None,
-                    errors: Some(app_err),
-                }
-            )).unwrap();
-            return false;
+            Err(app_err);
         }
     }
 
     // NONE: Match regular files only; skip hidden files, directories, and paths ignored by .gitignore.
     if mode.contains(FileMode::NONE) && !entry_type.is_file() {
-        return false;
+        return Ok(false);
     }
 
     // WITH_DIR: Match directories only; exclude regular and hidden files.
     if mode.contains(FileMode::WITH_DIR) && !entry_type.is_dir() {
-        return false;
+        return Ok(false);
     }
 
     // FUZZY: Match files by stem name.
     if mode.contains(FileMode::FUZZY) {
         let current_stem = entry.file_stem().to_string_lossy();
         if name != current_stem {
-            return false;
+            return Ok(false);
         }
     }
 
     // CASE_INSENSITIVE: Perform case-insensitive filename comparison.
     let current_name = entry.file_name().to_string_lossy();
     if mode.contains(FileMode::CASE_INSENSITIVE) && name.to_lowercase() != current_name.to_lowercase() {
-        return false;
+        return Ok(false);
     } else if name != current_name {
-        return false;
+        return Ok(false);
     }
 
-true
+    Ok(true)
 }

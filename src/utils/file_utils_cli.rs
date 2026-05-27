@@ -30,6 +30,13 @@ use crate::types::SafetyLevel;
 use crate::types::FileMode;
 use crate::types::FileResult;
 
+/// Get some unchecked paths from the user.
+///
+/// # Arguments
+/// * No arguments required
+///
+/// # Returns
+/// * 
 pub fn get_unchecked_paths_cli() -> FileResult {
     const MAX_PATH_NUM = 2000;
 
@@ -50,7 +57,7 @@ pub fn get_unchecked_paths_cli() -> FileResult {
 
         user_input.clear();
         if let Err(err) = io::stdin().read_line(&mut user_input) {
-            let app_error = AppError::from_io_file_error(err, user_input.clone());
+            let app_err = AppError::from_io_file_error(err, user_input.clone());
 
             paths_errors.push(app_err);
 
@@ -71,4 +78,88 @@ pub fn get_unchecked_paths_cli() -> FileResult {
         .collect();
 
     FileResult {paths: Some(unchecked_input), errors: Some(paths_errors)}
+}
+
+/// Get a mode from the user.
+///
+/// # Arguments
+/// * No arguments required
+///
+/// # Returns
+/// * 
+pub fn get_mode() {
+    println!("Please enter mode(leave blank for none mode)");
+    println!("N: none, H: with-hidden, D: only-directory, C: case-insensitive,\n
+        U: unrestricted recursion, F: fuzzy, A: all");
+
+    let input_mode = String::new();
+    let mut app_err: AppError;
+
+    let mode = loop{
+        input_mode.clear();
+        if let Err(err) = io::stdin().read_line(&mut input_mode) {
+            app_err = AppError::from_io_file_error(err, input_mode);
+
+        input_mode = input_mode.trim().to_string();
+
+        match input_mode.to_byte.get(0) {
+            None => {
+                break FileMode::NONE;
+            },
+
+            Some(b'N') => {
+                break FileMode::NONE;
+            }, 
+
+            Some(b'H') => {
+                break FileMode::WITH_HIDDEN;
+            },
+
+             Some(b'D') => {
+                break FileMode::WIRH_DIR;
+            },
+
+            Some(b'C') => {
+                break FileMode::CASE_INSENSITIVE;
+            },
+
+            Some(b'U') => {
+                break FileMode::UNLIMITED;
+            },
+
+            Some(b'F') => {
+                break FileMode::FUZZY;
+            },
+
+            Some(b'A') => {
+                break FileMode::ALL;
+            },
+
+            _ => {
+                println!("Invalid input. Please try again.")
+            },
+    }
+
+
+    (mode, app_err) 
+}
+
+/// 
+///
+///
+///
+pub fn monitor_commands() {
+    let input = String::new();
+
+    println!("Enter 'stop' to terminate the task.")
+    read_line(&)
+
+    match {
+        stop => {}
+
+        _ => {
+            println!("Please enter a valid command.");
+        }
+    }
+
 }
