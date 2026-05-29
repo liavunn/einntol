@@ -26,14 +26,14 @@ pub mod file_errors;
 /// converting system errors into application errors.
 pub mod errors_conversion;
 
-/// Represents a standardized error format for frontend or external interfaces.
-#[derive(serde::Serialize)]
-pub struct CommandError {
-    /// The error kind.
-    pub kind: String,
-    /// The error masage.
-    pub message: String,
-}
+// /// Represents a standardized error format for frontend or external interfaces.
+// #[derive(serde::Serialize)]
+// pub struct CommandError {
+//      /// The error kind.
+//      pub kind: String,
+//      /// The error masage.
+//      pub message: String,
+//  }
 
 /// The top-level error type that aggregates all sub-module errors.
 #[derive(Error, Debug)]
@@ -41,6 +41,9 @@ pub enum AppError {
     /// Represents a file system error.
     #[error(transparent)]
     File(#[from] file_error::FileOperationError),
+
+    #[error(transparent)]
+    Generic(#[from] ),
 
     /// Represents generic system-level errors with a custom message.
     #[error(System error: {:#?}.)]

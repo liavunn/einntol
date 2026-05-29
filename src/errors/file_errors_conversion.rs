@@ -28,88 +28,87 @@ use super::file_errors::{FileOperationError, FileError};
 /// Global read-only disk information manager for error diagnostics.
 static DISK_MANAGER: Lazy<Disk> = Lazy::new(|| {Disks::new_with_refreshed_list()});
 
+impl AppError {
+    /// Converts a standard std::io::Error into an enriched AppError.
+    pub fn from_io_file_error(err: Option<std::io::Error>, path: PathBuf) -> FileOperationError {
+        #[cfg(feature = "logging")]
+        let path_for_log = path.clone();
 
-/// Converts a standard std::io::Error into an enriched AppError.
-pub fn from_io_file_error(err: Option<std::io::Error>, path: PathBuf) -> FileOperationError {
-    #[cfg(feature = "logging")]
-    let path_for_log = path.clone();
+        let err = match err {
+            Some(error) => error,
 
-    let err = match err {
-        Some(error) => error,
-
-        None => return FileOperationErrro {
-            errors: Some(FileError::NoneError),
-            path: None
+            None => return FileOperationErrro {
+                errors: Some(FileError::NoneError),
+                path: None
+            }
         }
-    }
 
-    let error_type = match err.kind() {
-      // The file not found.
-        std::io::ErrorKind::NotFound => {
-            if let Some(parent) = path.parent() {
-                if parent.exists() {
-                    FileError::FileNotFound
+        let error_type = match err.kind() {
+            // The file not found.
+            std::io::ErrorKind::NotFound => {
+                if let Some(parent) = path.parent() {
+                    if parent.exists() {
+                        FileError::FileNotFound
+                    } else {
+                        FileError::PathNotFound
+                    }
                 } else {
                     FileError::PathNotFound
                 }
-            } else {
-                FileError::PathNotFound
             }
-        }
 
-        // Out of storage space.
-        std::io::ErrorKind::StorageFull => {
-            if let Some(disk) = DISK_MANAGER.iter().find(|disk| path.starts_with(disk.mount_point)) {
-                let total = disk.total_space() as i64;
-                let available = disk.available_space() as i64;
+            // Out of storage space.
+            std::io::ErrorKind::StorageFull => {
+                if let Some(disk) = DISK_MANAGER.iter().find(|disk| path.starts_with(disk.mount_point)) {
+                    let total = disk.total_space() as i64;
+                    let available = disk.available_space() as i64;
 
-                FileError::InsufficientStorage {
-                    remaining: available,
-                    used: total - available,
-                    total_capacity: total,                  
+                    FileError::InsufficientStorage {
+                        remaining: available,
+                        used: total - available,
+                        total_capacity: total,                  
+                    }
                 }
             }
+
+            // Data is corrupted or reached unexpected EOF.
+            std::io::ErrorKind::InvalidData | std::io::ErrorKind::UnexpectedEof =>
+                FileError::FileCorrupted,
+
+            // Insufficient permissions.
+            std::io::ErrorKind::PermissionDenied =>
+                FileError::PermissionDenied),
+
+            // Path contains illegal characters or is malformed.
+            std::io::ErrorKind::InvalidInput =>
+                FileError::InvalidInput,
+
+            // The destination path already exists.
+            std::io::ErrorKind::AlreadyExists =>
+                FileError::AlreadyExists,
+
+            // Expected a file. but is a directory.
+            std::io::ErrorKind::IsADirectory =>
+                FileError::IsADirectory,
+
+            // Expected a path. but is a file.
+            std::io::ErrorKind::NotADirectory =>
+                FileError::NotADirectory,
+
+            // Fallback: capture generic system error with path context.
+            _ => FileError::IOError(err.to_string(),
         }
 
-        // Data is corrupted or reached unexpected EOF.
-        std::io::ErrorKind::InvalidData | std::io::ErrorKind::UnexpectedEof =>
-            FileError::FileCorrupted,
+        #[cfg(feature = "logging")]
+        {
+            tracing::error!(
+                path = %path_for_log.display(),
+                "Summary: {}\nDetail: {:#?}",
+                    error_type,
+                    err
+            );
+        }
 
-        // Insufficient permissions
-        std::io::ErrorKind::PermissionDenied =>
-            FileError::PermissionDenied),
-
-        // Path contains illegal characters or is malformed.
-        std::io::ErrorKind::InvalidInput =>
-            FileError::InvalidInput,
-
-        // The destination path already exists.
-        std::io::ErrorKind::AlreadyExists =>
-            FileError::AlreadyExists,
-
-        // Expected a file. but is a directory.
-        std::io::ErrorKind::IsADirectory =>
-            FileError::IsADirectory,
-        // Expected a path. but is a file.
-        std::io::ErrorKind::NotADirectory =>
-            FileError::NotADirectory,
-
-        // Fallback: capture generic system error with path context.
-        _ => FileError::IOError(err.to_string(),
-
-        // Is a None error.
-        None => FileError::NoneError,
+    FileOperationError {Some(error_type), Some(path)}
     }
-
-#[cfg(feature = "logging")]
-{
-    tracing::error!(
-        path = %path_for_log.display(),
-        "Summary: {}\nDetail: {:#?}",
-            error_type,
-            err
-    );
-}
-    
-FileOperationError {Some(error_type), Some(path)}
 }

@@ -36,7 +36,7 @@ use crate::types::FileResult;
 /// * No arguments required
 ///
 /// # Returns
-/// * 
+/// * REturns retrieved unchecked paths.
 pub fn get_unchecked_paths_cli() -> FileResult {
     const MAX_PATH_NUM = 2000;
 
@@ -86,7 +86,8 @@ pub fn get_unchecked_paths_cli() -> FileResult {
 /// * No arguments required
 ///
 /// # Returns
-/// * 
+/// * Returns a `FileMode` representing the selected mode.
+/// * Defaults to `FileMode::NONE` if no input is provided.
 pub fn get_mode() {
     println!("Please enter mode(leave blank for none mode)");
     println!("N: none, H: with-hidden, D: only-directory, C: case-insensitive,\n
@@ -148,17 +149,26 @@ pub fn get_mode() {
 ///
 ///
 ///
-pub fn monitor_commands() {
+pub fn monitor_commands(stop_signal: Arc(AtomicBool)) {
     let input = String::new();
 
-    println!("Enter 'stop' to terminate the task.")
-    read_line(&)
+    loop{
+        println!("Enter 'stop' to terminate the task.")
+        input.clear();
+        let input = read_line(&input);
 
-    match {
-        stop => {}
+        if let Err(err) = input {
+            AppError::
+        }
 
-        _ => {
-            println!("Please enter a valid command.");
+        match {
+            stop => {
+                stop_signal.store(true, Ordering::SeqCst);
+            }
+
+            _ => {
+                println!("Please enter a valid command.");
+            }
         }
     }
 

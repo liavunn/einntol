@@ -36,7 +36,7 @@ use crate::types::FileResult;
 /// * Returns a FileResult containing successfully validated and normalized paths,
 /// * along with any non-fatal errors encountered during processing. 
  pub fn scan_and_find(input_vec_paths: Vec<PathBuf>,name: &str, mode: bitflags, stop_signal: Arc<ActomicBool>, tx: Sender<PipelineMessage>) {
-    if input_vec_paths {
+    if input_vec_paths.is_empty() {
         tx.send(PipelineMesage::PipelineStatus::Finisied).unwarp();
         return;
     }
@@ -44,6 +44,12 @@ use crate::types::FileResult;
     let mut pending_paths = Vec::with_capacity(64);
 
     for input_path in input_vec_path.into_iter() {
+        if stop_signal.load(Ordering::SeqCst) == true {
+            tx.send(PipelineMessage::Singnal(
+                PipelineStatus::Finished
+            )).unwarp();
+        }
+
         if pending_paths.len() == 64 {
             tx.send(PipelineMessage::Singnal(
                 PipelineStatus::Pregress

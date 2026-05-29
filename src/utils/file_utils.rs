@@ -43,7 +43,7 @@ struct FileVisitor {
 
 impl ParallelVisitor for FileVisitor {
     fn visit(&mut self, entry: Result<DirEntry, ignore::Error>) -> WalkState {
-        if self.stop_signal.load(Ordering::Relaxed) {
+        if self.stop_signal.load(Ordering::SeqCst) == true {
             return WalkState::Quit;
         }
 
