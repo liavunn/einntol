@@ -26,6 +26,8 @@ pub mod file_errors;
 /// converting system errors into application errors.
 pub mod errors_conversion;
 
+use file_errors::FileOoperationError;
+
 // /// Represents a standardized error format for frontend or external interfaces.
 // #[derive(serde::Serialize)]
 // pub struct CommandError {
@@ -42,8 +44,9 @@ pub enum AppError {
     #[error(transparent)]
     File(#[from] file_error::FileOperationError),
 
+    /// 
     #[error(transparent)]
-    Generic(#[from] ),
+    Generic(#[from] generic_error::GenericError),
 
     /// Represents generic system-level errors with a custom message.
     #[error(System error: {:#?}.)]

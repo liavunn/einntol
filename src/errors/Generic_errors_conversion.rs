@@ -34,16 +34,21 @@ impl AppError {
         let err = match err {
             Some(error) => error,
 
-            None => return FileOperationErrro {
-                errors: Some(FileError::NoneError),
-                path: None
-            }
+            None => return GenericError::NoneError,
         }
 
         let error_type = match err.kind() {
-            // 
-            std::io::ErrorKind::=> {
-            }
+            // Invalid data (e.g., malformed UTF-8)
+            std::io::ErrorKind::InvalidData =>
+                GenericError::InvalidData,
+
+            // The system call was interrupted by a signal.
+            std::io::ErrorKind::Interrupted =>
+                GenericError::Interrupted,
+            
+            // The input stream ended earlier than expected.
+            std::io::ErrorKind::UnexpectedEof =>
+                GenericError::UnexpectedEof,
 
             // Fallback: capture generic system error with path context.
             _ => FileError::IOError(err.to_string(),

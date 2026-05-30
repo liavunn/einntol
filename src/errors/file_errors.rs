@@ -22,6 +22,7 @@
 
 use thiserror;
 
+/// 
 #[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic)]
 #[error("File error at {path:#?} : {Error_type}")]
 pub FileOperationError {

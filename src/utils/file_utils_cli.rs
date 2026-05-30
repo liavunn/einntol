@@ -33,7 +33,7 @@ use crate::types::FileResult;
 /// Get some unchecked paths from the user.
 ///
 /// # Arguments
-/// * No arguments required
+/// * No arguments required.
 ///
 /// # Returns
 /// * REturns retrieved unchecked paths.
@@ -57,7 +57,7 @@ pub fn get_unchecked_paths_cli() -> FileResult {
 
         user_input.clear();
         if let Err(err) = io::stdin().read_line(&mut user_input) {
-            let app_err = AppError::from_io_file_error(err, user_input.clone());
+            let app_err = AppError::from_io_file_error(Some(err), user_input.clone());
 
             paths_errors.push(app_err);
 
@@ -83,7 +83,7 @@ pub fn get_unchecked_paths_cli() -> FileResult {
 /// Get a mode from the user.
 ///
 /// # Arguments
-/// * No arguments required
+/// * No arguments required.
 ///
 /// # Returns
 /// * Returns a `FileMode` representing the selected mode.
@@ -99,7 +99,7 @@ pub fn get_mode() {
     let mode = loop{
         input_mode.clear();
         if let Err(err) = io::stdin().read_line(&mut input_mode) {
-            app_err = AppError::from_io_file_error(err, input_mode);
+            app_err = AppError::from_io_file_error(Some(err), input_mode);
 
         input_mode = input_mode.trim().to_string();
 
@@ -145,23 +145,28 @@ pub fn get_mode() {
     (mode, app_err) 
 }
 
-/// 
+/// Monitor input and send a signal upon detecting a command.
 ///
+/// # Arguments
+/// * No arguments required.
 ///
-///
+/// # Returns
+/// * Returns nothing.
 pub fn monitor_commands(stop_signal: Arc(AtomicBool)) {
     let input = String::new();
 
     loop{
         println!("Enter 'stop' to terminate the task.")
-        input.clear();
-        let input = read_line(&input);
 
-        if let Err(err) = input {
-            AppError::
+        input.clear();
+        if let Err(err) = io::stdin().read_line(&mut input) {
+            AppError::from_io_generic_error(Some(err));
+            continue;
         }
 
-        match {
+        let input_trim = input.trim()
+
+        match input_trim {
             stop => {
                 stop_signal.store(true, Ordering::SeqCst);
             }

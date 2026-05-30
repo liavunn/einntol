@@ -23,6 +23,18 @@
 use thiserror;
 
 pub enum GenericError {
+    /// 
+    #[error("Invalid Input")]
+    InvalidData
+
+    /// 
+    #[error("Interrupted operation")]
+    Interrupted
+
+    /// 
+    #[error("Unexpected EOF")]
+    UnexpectedEof
+
     /// Generic input/output error with a descriptive message.
     #[error("IO Error")]
     IOError(String),
@@ -30,4 +42,4 @@ pub enum GenericError {
     /// Is a None Error.
     #[error("The error is None")]
     NoneErrro,
-}
+}   

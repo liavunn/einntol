@@ -127,7 +127,7 @@ impl SafetyLevel {
     pub fn path_safetylevel(path: impl AsRef<std::path::Path>) -> Result<Self, AppError> {
         let path = path.as_ref();
 
-        let absolute_path = path.canonicalize().map_err(|err| AppError::from_io_file_error(err, path.to_path_buf()))?;
+        let absolute_path = path.canonicalize().map_err(|err| AppError::from_io_file_error(Some(err), path.to_path_buf()))?;
 
         let first_component = absolute_path
             .components

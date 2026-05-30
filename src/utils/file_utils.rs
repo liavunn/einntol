@@ -50,7 +50,7 @@ impl ParallelVisitor for FileVisitor {
         let Ok(entry) = result_path else {
             let err = result_path.unwrap_err();
             let err_path = err.path().map(|path| path.to_path_buf().unwrap_or_default());
-            let app_err = AppError::from_io_file_error(std::io::Error::from(err), err_path);
+            let app_err = AppError::from_io_file_error(Some(std::io::Error::from(err)), err_path);
 
             self.tx.send(PipelineMessage::Data(
                 FileResult {
