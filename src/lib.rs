@@ -17,6 +17,8 @@
 #![forbid(warnings)]
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
+#![forbid(clippy::float_cmp)]
+#![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
@@ -26,6 +28,8 @@ pub mod errors;
 pub mod capabilities;
 /// Common data structures and global type definitions.
 pub mod types;
+/// 
+pub mod utils;
 
 use thiserror;
 use fastrand;
@@ -36,20 +40,35 @@ use wyhash::WyHash;
 /// Can be accessed via the specialized capability modules within the capabilities namespace.
 pub use crate::capabilities::{
     file_tool,
-//  network_tool,
-}
+//  todo: network_tool,
+};
+
 /// Re-expots the error types for convenient external access.
 ///
-/// Can be accessed via `einntol::FileError`.
-pub use crate::errors::file_errors::FileError;
+/// Can be accessed via:
+/// `einntol::FileError`
+/// `einntol::GenericError`.
+pub use crate::errors::{
+    file_errors::FileError,
+    generic_errors::GenericError
+};
+
+/// 
+pub use crate::errors::{
+    file_error_conversion,
+    generic_error_conversion,
+};
+
 /// Re-exports the error types for convenient external access.
 ///
 /// Can be accessed via `einntol::SafetyLevel`.
 pub use crate::types::SafetyLevel;
+
 /// Safety levels used for validating file paths and permissions.
 ///
 /// Can be accessed via `einntol::FileMode`.
 pub use crate::types::FileMode;
+
 /// Standardized result wrapper for all file-related operations.
 ///
 /// Can be accessed via `einntol::Result`.

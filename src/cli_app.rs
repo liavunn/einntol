@@ -17,21 +17,29 @@
 #![forbid(warnings)]
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
+#![forbid(clippy::float_cmp)]
+#![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
 use std::thead::scope;
 
-use anyhow;
+use miette;
 use fastrand;
 use wyhash;
 use crossbeam_channel::bounded;
 
-use crate::types::FileError;
-use crate::errors::file_errors_conversion::from_io_file_error;
-use crate::types::SafetyLevel;
-use crate::types::FileMode;
-use crate::types::FileResult;
+use crate::utils::{
+    file_errors::from_io_file_error,
+    generic_errors::from_io_generic_error
+};
+use crate::FileError;
+use crate::GenericError:
+use crate::from_io_file_error;
+use crate::from_io_generic_error;
+use crate::SafetyLevel;
+use crate::FileMode;
+use crate::FileResult;
 
 /// Main
 fn main() -> miette::Result<()> {
@@ -46,36 +54,39 @@ fn main() -> miette::Result<()> {
             let counter = Arc::new(AtomicUsize::new(0));
             let unchecked_paths = get_unchecked_paths_cli();
 
+            s.spanw {|| {
+                monitor_commands(counter);
+            }}
+
             match unchecked_paths.errors {
                 Some(errors) if !errors.is_empty() => 
                     for unchecked_path in errors.iter {
-                        println!("{}", unchecked_path);
+                        println!("Bad path: {}", unchecked_path);
                     },
 
-                _ => println!("");,
+                _ => println!("All paths are valid.");,
             }
 
             match unchecked_paths.paths {
                 Some(paths) => scan_and_find(paths, name, mode, counter, tx);
-            }
-        }}
 
-        s.spanw {|| {
-            println!("")
-            read_line
+                _ => printfln!("No valid paths available.");
+            }
         }}
 
         // 
         while Ok(message) = rx.revc {
             match message {
                 PipelineMessage::Data(result) => {
-                    println!("");
+                    println!("Starting search...");
                     if let Some(path) {
-                        println!("{}", path)
+                        println!("Found: ");
+                        println!("{}", path);
                     }
                 
                   if let Some(error) {
-                      |||
+                      println!("Error: ");
+                      println!("{}", error);
                   }
                 }
 

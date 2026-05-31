@@ -17,6 +17,8 @@
 #![forbid(warnings)]
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
+#![forbid(clippy::float_cmp)]
+#![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
@@ -28,11 +30,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use ignore::{WalkBuilder, walk, DirEntry};
 use crossbeam_channel::bounded;
 
-use crate::types::FileError;
-use crate::types::SafetyLevel;
-use crate::types::FileMode;
-use crate::types::FileResult;
-use crate::types::PipelineMessage;
+use crate::FileError;
+use crate::GenericError;
+use crate::SafetyLevel;
+use crate::FileMode;
+use crate::FileResult;
+use crate::PipelineMessage;
 
 struct FileVisitor {
     name: String,
@@ -66,6 +69,7 @@ impl ParallelVisitor for FileVisitor {
                 if is_match {
                     self.tx.send(PipelineMessage::Data(
                     FileResult {
+
                         paths: Some(entry.path().to_path_buf()),
                         errors: None,
                     })).unwrap();

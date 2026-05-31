@@ -17,6 +17,8 @@
 #![forbid(warnings)]
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
+#![forbid(clippy::float_cmp)]
+#![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
@@ -93,7 +95,9 @@ pub fn get_mode() {
     println!("N: none, H: with-hidden, D: only-directory, C: case-insensitive,\n
         U: unrestricted recursion, F: fuzzy, A: all");
 
-    let input_mode = String::new();
+    let input_mode#![forbid(clippy::float_cmp)]
+#![forbid(clippy::as_conversions)]
+ = String::new();
     let mut app_err: AppError;
 
     let mode = loop{
