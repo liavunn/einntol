@@ -15,9 +15,10 @@
 //! Aggregates all sub-module error types.
 //! Provides a unified `AppError` enum as a container for internal and cross-boundary communication.
 
-#![forbid(warnings)]
-#![forbid(clippy::all)]
-#![forbid(clippy::pedantic)]
+#![deny(warnings)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::all)]
+#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
@@ -25,10 +26,17 @@
 
 /// Specialized error types for file system operations.
 pub mod file_errors;
-/// converting system errors into application errors.
-pub mod errors_conversion;
 
-use file_errors::FileOoperationError;
+/// converting system errors into application errors.
+pub mod file_errors_conversion;
+
+/// 
+pub mod generic_errors;
+
+/// 
+pub mod generic_errors_conversion;
+
+use thiserror;
 
 // /// Represents a standardized error format for frontend or external interfaces.
 // #[derive(serde::Serialize)]
@@ -40,7 +48,7 @@ use file_errors::FileOoperationError;
 //  }
 
 /// The top-level error type that aggregates all sub-module errors.
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum AppError {
     /// Represents a file system error.
     #[error(transparent)]
@@ -48,9 +56,9 @@ pub enum AppError {
 
     /// 
     #[error(transparent)]
-    Generic(#[from] generic_error::GenericError),
+    Generic(#[from] generic_errors::GenericError),
 
     /// Represents generic system-level errors with a custom message.
-    #[error(System error: {:#?}.)]
+    #[error("System error: {0:#?}.")]
     System(String),
 }

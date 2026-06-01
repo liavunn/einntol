@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! CLI Utilities.
+//! File CLI utilities.
 
 #![forbid(warnings)]
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
+#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
@@ -24,13 +25,14 @@
 
 use std::collections::HashSet;
 use std::hash::BuildHasherDefault;
-use std::io::{self, Write};
+use std::io;
 use std::path::PathBuf;
 
-use crate::types::FileError;
-use crate::types::SafetyLevel;
-use crate::types::FileMode;
-use crate::types::FileResult;
+use wyhash::WyHash;
+
+use crate::AppError;
+use crate::FileMode;
+use crate::FileResult;
 
 /// Get some unchecked paths from the user.
 ///
@@ -40,10 +42,10 @@ use crate::types::FileResult;
 /// # Returns
 /// * REturns retrieved unchecked paths.
 pub fn get_unchecked_paths_cli() -> FileResult {
-    const MAX_PATH_NUM = 2000;
+    const MAX_PATH_NUM: usize = 2000;
 
-    printfln!("Please enter path(leave blank for current directory)");
-    printfln!("Enter \"end\" to finish: ");
+    println!("Please enter path(leave blank for current directory)");
+    println!("Enter \"end\" to finish: ");
 
     type WyHashSet<T> = HashSet<T, BuildHasherDefault<WyHash>>;
 
@@ -53,13 +55,13 @@ pub fn get_unchecked_paths_cli() -> FileResult {
 
     loop { 
         if unchecked_input_string.len == MAX_PATH_NUM {
-            printfln!("Path limit reached.")
+            println!("Path limit reached.");
             break;
         }
 
         user_input.clear();
         if let Err(err) = io::stdin().read_line(&mut user_input) {
-            let app_err = AppError::from_io_file_error(Some(err), user_input.clone());
+            let app_err = AppError::from_io_generic_error(Some(err), user_input.clone());
 
             paths_errors.push(app_err);
 
@@ -68,18 +70,17 @@ pub fn get_unchecked_paths_cli() -> FileResult {
 
         let user_input_trim = user_input.trim().to_string();
         if user_input_trim == "end" {
-            break:
-        } else {
-            unchecked_input_string.push(user_input_trim);
+            break;
         }
+        unchecked_input_string.push(user_input_trim);
     }
 
-    unchecked_pathbuf Vec<PathBuf> = unchecked_input_string
+    let unchecked_pathbuf: Vec<PathBuf> = unchecked_input_string
         .into_iter()
         .map(|str| PathBuf::from(str))
         .collect();
 
-    FileResult {paths: Some(unchecked_input), errors: Some(paths_errors)}
+    FileResult {paths: Some(unchecked_pathbuf), errors: Some(paths_errors)}
 }
 
 /// Get a mode from the user.
@@ -95,15 +96,14 @@ pub fn get_mode() {
     println!("N: none, H: with-hidden, D: only-directory, C: case-insensitive,\n
         U: unrestricted recursion, F: fuzzy, A: all");
 
-    let input_mode#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
- = String::new();
+    let input_mode = String::new();
     let mut app_err: AppError;
 
     let mode = loop{
         input_mode.clear();
         if let Err(err) = io::stdin().read_line(&mut input_mode) {
-            app_err = AppError::from_io_file_error(Some(err), input_mode);
+            app_err = AppError::from_io_generic_error(Some(err), input_mode);
+        }
 
         input_mode = input_mode.trim().to_string();
 
@@ -120,8 +120,8 @@ pub fn get_mode() {
                 break FileMode::WITH_HIDDEN;
             },
 
-             Some(b'D') => {
-                break FileMode::WIRH_DIR;
+            Some(b'D') => {
+               break FileMode::WIRH_DIR;
             },
 
             Some(b'C') => {
@@ -143,43 +143,8 @@ pub fn get_mode() {
             _ => {
                 println!("Invalid input. Please try again.")
             },
-    }
-
-
-    (mode, app_err) 
-}
-
-/// Monitor input and send a signal upon detecting a command.
-///
-/// # Arguments
-/// * No arguments required.
-///
-/// # Returns
-/// * Returns nothing.
-pub fn monitor_commands(stop_signal: Arc(AtomicBool), tx: Sender<PipelineMessage>) {
-    let input = String::new();
-
-    loop{
-        println!("Enter 'stop' to terminate the task.")
-
-        input.clear();
-        if let Err(err) = io::stdin().read_line(&mut input) {
-            AppError::from_io_generic_error(Some(err));
-            continue;
         }
+    };
 
-        let input_trim = input.trim()
-
-        match input_trim {
-            stop => {
-                stop_signal.store(true, Ordering::SeqCst);
-                tx.send(PipelineMessage::Signal(PipelineStatus::Aborted)).unwrap();
-            }
-
-            _ => {
-                println!("Please enter a valid command.");
-            }
-        }
-    }
-
+    return (mode, app_err); 
 }

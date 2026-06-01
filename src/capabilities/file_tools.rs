@@ -17,17 +17,24 @@
 #![forbid(warnings)]
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
+#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use std::io;
+use std::path::PathBuf;
+use std::sync::{Arc, atomic::AtomicBool};
+use std::sync::atomic::Ordering;
 
-use crate::types::FileError;
-use crate::types::SafetyLevel;
-use crate::types::FileMode;
-use crate::types::FileResult;
+use crossbeam_channel::Sender;
+
+use crate::AppError;
+use crate::FileMode;
+use crate::FileResult;
+use crate::PipelineMessage;
+use crate::PipelineStatus;
+use crate::file_utils::find_paths;
 
 /// Gets the path from user input.
 ///
@@ -37,57 +44,57 @@ use crate::types::FileResult;
 /// # Returns
 /// * Returns a FileResult containing successfully validated and normalized paths,
 /// * along with any non-fatal errors encountered during processing. 
- pub fn scan_and_find(input_vec_paths: Vec<PathBuf>,name: &str, mode: bitflags, stop_signal: Arc<ActomicBool>, tx: Sender<PipelineMessage>) {
+ pub fn scan_and_find(input_vec_paths: Vec<PathBuf>,name: &str, mode: FileMode, stop_signal: Arc<AtomicBool>, tx: Sender<PipelineMessage>) {
     if input_vec_paths.is_empty() {
-        tx.send(PipelineMesage::PipelineStatus::Finisied).unwarp();
+        tx.send(PipelineMessage::PipelineStatus::Finished).unwrap();
         return;
     }
 
-    const batch_size = 64;
-    let mut pending_paths = Vec::with_capacity(batch_size);
+    const BATCH_SIZE: usize = 64;
+    let mut pending_paths = Vec::with_capacity(BATCH_SIZE);
     let mut processed_count: i64 = 0;
 
-    for input_path in input_vec_path.into_iter() {
+    for input_path in input_vec_paths.into_iter() {
         if stop_signal.load(Ordering::SeqCst) == true {
-            tx.send(PipelineMessage::Singnal(
+            tx.send(PipelineMessage::Signal(
                 PipelineStatus::Aborted
-            )).unwarp();
+            )).unwrap();
         }
 
-        if pending_paths.len() == batch_size {
-            processed_count += batch_size;
-            tx.send(PipelineMessage::Singnal(
-                PipelineStatus::Pregress(Some(processed_count))
-            )).unwarp();
+        if pending_paths.len() == BATCH_SIZE {
+            processed_count += BATCH_SIZE;
+            tx.send(PipelineMessage::Signal(
+                PipelineStatus::Progress(Some(processed_count))
+            )).unwrap();
 
             find_paths(pending_paths, name, mode.clone());
 
-            pending_paths = Vec::with_capacity(batch_size);
+            pending_paths = Vec::with_capacity(BATCH_SIZE);
         }
 
-        let path_status = std::fs::metadata(&inpnut_path)
-            .map(|_| input_path)
+        let path_status = std::fs::metadata(&input_path)
+            .map(|_| input_path);
 
         let Ok(current_path) = path_status else {
-            let err = path_status.unwarp_err();
+            let err = path_status.unwrap_err();
             let app_err = AppError::from_io_file_error(err, input_path);
             tx.send(PipelineMessage::Data(
                 FileResult {
                     path: None,
                     error: app_err
                 }
-            )).unwarp();
+            )).unwrap();
 
             continue;
-        }
+        };
 
         pending_paths.push(current_path)
     }
 
     if !pending_paths.is_empty() {
         processed_count += pending_paths.len();
-        tx.send(PipelineMessage::Singnal(
-            PipelineStatus::Pregress(Some(processed_count))
+        tx.send(PipelineMessage::Signal(
+            PipelineStatus::Progress(Some(processed_count))
         ));
         find_paths(pending_paths);
     }

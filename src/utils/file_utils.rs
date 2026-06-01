@@ -12,27 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! General Utilities.
+//! General file utilities.
 
 #![forbid(warnings)]
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
+#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use std::io::{self, write};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use ignore::{WalkBuilder, walk, DirEntry};
-use crossbeam_channel::bounded;
+use ignore::{ParallelVisitor, WalkBuilder, WalkState, DirEntry};
+use crossbeam_channel::Sender;
 
-use crate::FileError;
-use crate::GenericError;
-use crate::SafetyLevel;
+use crate::AppError;
 use crate::FileMode;
 use crate::FileResult;
 use crate::PipelineMessage;
@@ -51,8 +49,8 @@ impl ParallelVisitor for FileVisitor {
             return WalkState::Quit;
         }
 
-        let Ok(entry) = result_path else {
-            let err = result_path.unwrap_err();
+        let Ok(entry) = entry else {
+            let err = entry.unwrap_err();
             let err_path = err.path().map(|path| path.to_path_buf().unwrap_or_default());
             let app_err = AppError::from_io_file_error(Some(std::io::Error::from(err)), err_path);
 
@@ -83,9 +81,10 @@ impl ParallelVisitor for FileVisitor {
                     paths: None,
                     errors: Some(app_err),
                 })).unwrap();
+            
+                return WalkStaate::Continue;
             }
-
-        return WalkStaate::Continue;        
+        }
     }
 }
 
@@ -136,12 +135,12 @@ pub fn find_paths(
 
     parallel_walker.visit(|| {
         FileVisitor {
-            stop_signal: Arc::clone(&stop_signal);
-            tx: tx.clone();
-            mode: mode.clone();
-            name: Arc::clone(&arc_str_name);
+            stop_signal: Arc::clone(&stop_signal),
+            tx: tx.clone(),
+            mode: mode.clone(),
+            name: Arc::clone(&arc_str_name),
         }
-    }
+    });
 
     tx.send(PipelineMessage::signal(PipelineStatus::Finished)).unwrap();
 }
@@ -168,7 +167,7 @@ fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode) -> Result<
             let app_err = AppError::from_io_file_error(None, entry.path());
             Err(app_err);
         }
-    }
+    };
 
     // NONE: Match regular files only; skip hidden files, directories, and paths ignored by .gitignore.
     if mode.contains(FileMode::NONE) && !entry_type.is_file() {

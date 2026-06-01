@@ -14,20 +14,23 @@
 
 //! Error types related ro file system operations.
 
-#![forbid(warnings)]
-#![forbid(clippy::all)]
-#![forbid(clippy::pedantic)]
+#![deny(warnings)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::all)]
+#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
+use std::path::PathBuf;
+
 use thiserror;
 
 /// 
 #[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic)]
-#[error("File error at {path:#?} : {Error_type}")]
-pub FileOperationError {
+#[error("File error at {path:#?} : {error_type:#?}")]
+pub struct FileOperationError {
     error_type: Option<FileError>,
     path: Option<PathBuf>,
 }
@@ -81,7 +84,11 @@ pub enum FileError {
     #[error("IO Error")]
     IOError(String),
 
+    /// The error is unknown.
+    #[error("Unknown")]
+    Unknown,
+
     /// Is a None Error.
     #[error("The error is None")]
-    NoneErrro,
+    NoneError,
 }

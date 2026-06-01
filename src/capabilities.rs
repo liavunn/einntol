@@ -12,39 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Error types related ro file system operations.
+//! Aggregates and manages core business capabilities.
 
-#![deny(warnings)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::all)]
+#![forbid(warnings)]
+#![forbid(clippy::all)]
+#![forbid(clippy::pedantic)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use thiserror;
+/// File manipulation tools.
+pub mod file_tools;
 
-/// Generic error types.
-#[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic)]
-pub enum GenericError {
-    /// 
-    #[error("Invalid Input")]
-    InvalidData,
-
-    /// 
-    #[error("Interrupted operation")]
-    Interrupted,
-
-    /// 
-    #[error("Unexpected EOF")]
-    UnexpectedEof,
-
-    /// Generic input/output error with a descriptive message.
-    #[error("IO Error")]
-    IOError(String),
-
-    /// Is a None Error.
-    #[error("The error is None")]
-    NoneErrro,
-}   
+/// Unicode processing tools.
+pub mod unicode_tools;

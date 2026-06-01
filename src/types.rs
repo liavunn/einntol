@@ -14,42 +14,47 @@
 
 //! Global configuration modes and flag definitions.
 
-#![forbid(warnings)]
-#![forbid(clippy::all)]
-#![forbid(clippy::pedantic)]
+#![deny(warnings)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::all)]
+#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
+use std::path::PathBuf;
+
+use crate::AppError;
+
 bitflags::bitflags! {
     /// Represents a set of active file behavior flags.
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub struct FileMode {
+    pub struct FileMode: u8 {
         /// No special modes enabled by default.
-        const NONE             = 0b0000_0000,
+        const NONE             = 0b0000_0000;
 
         /// Include hidden files or directories.
-        const WITH_HIDDEN      = 0b0000_0001,
+        const WITH_HIDDEN      = 0b0000_0001;
 
         /// Include directories in the results.
-        const WITH_DIR         = 0b0000_0010,
+        const WITH_DIR         = 0b0000_0010;
 
         /// Ignore differences in letter case.
-        const CASE_INSENSITIVE = 0b0000_0100,
+        const CASE_INSENSITIVE = 0b0000_0100;
 
         /// UNRESTRICTED.
-        const UNLIMITED        = 0b0000_1000,
+        const UNLIMITED        = 0b0000_1000;
 
         /// 
-        const FUZZY            = 0b0001_0000,
+        const FUZZY            = 0b0001_0000;
 
         /// Enable all of the above flags.
         const ALL              = Self::WITH_HIDDEN.bits() |
                                  Self::WITH_DIR.bits() |
                                  Self::CASE_INSENSITIVE.bits() |
                                  Self::RECURSIVE.bits() |
-                                 Self::FUZZY.bits(),
+                                 Self::FUZZY.bits();
     }
 }
 
@@ -140,18 +145,19 @@ impl SafetyLevel {
             .nth(1)
             .and_then(|com|as_os_str().to_str());
 
-        let level = match (first_component) {
+        let level = match first_component {
             Some("boot" | "dev" |"proc" | "sys" | "run" | "lib" | "lib64") => 
-                SafetyLevel::Danger {needs_su: true}.
+                SafetyLevel::Danger {needs_su: true},
 
             Some("root" | "bin" | "sbin" | "etc" | "usr" | "var") =>
                 SafetyLevel::Warning {needs_su: true},
             Some("home") => SafetyLevel::Warning {needs_su: false},
 
-            Some(_) => SafetyLevel::Safe {needs_su  false},
+            _ => SafetyLevel::Safe {needs_su: false},
 
             None => SafetyLevel::Safe {needs_su: false},
-        }
-        OK(level)
+        };
+
+        Ok(level)
     }
 }

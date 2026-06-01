@@ -14,41 +14,45 @@
 
 //! Converts `std::io::Error` into a custom error enum.
 
-#![forbid(warnings)]
-#![forbid(clippy::all)]
+#![deny(warnings)]
 #![forbid(clippy::pedantic)]
+#![forbid(clippy::all)]
+#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use once_cell:sync::Lazy;
+use std::path::PathBuf;
+
+use once_cell::sync::Lazy;
 use sysinfo::Disks;
 
-use super::file_errors::{FileOperationError, FileError};
+use crate::{FileOperationError, FileError};
+use crate::AppError;
 
 /// Global read-only disk information manager for error diagnostics.
-static DISK_MANAGER: Lazy<Disk> = Lazy::new(|| {Disks::new_with_refreshed_list()});
+static DISK_MANAGER: Lazy<Disks> = Lazy::new(|| {Disks::new_with_refreshed_list()});
 
 impl AppError {
     /// Converts a standard std::io::Error into an enriched AppError.
-    pub fn from_io_file_error(err: Option<std::io::Error>, path: PathBuf) -> FileOperationError {
+    pub fn from_io_file_error(err: Option<std::io::Error>, err_path: PathBuf) -> FileOperationError {
         #[cfg(feature = "logging")]
-        let path_for_log = path.clone();
+        let path_for_log = err_path.clone();
 
         let err = match err {
             Some(error) => error,
 
-            None => return FileOperationErrro {
-                errors: Some(FileError::NoneError),
+            None => return FileOperationError {
+                error_type: Some(FileError::NoneError),
                 path: None
             }
-        }
+        };
 
         let error_type = match err.kind() {
             // The file not found.
             std::io::ErrorKind::NotFound => {
-                if let Some(parent) = path.parent() {
+                if let Some(parent) = err_path.parent() {
                     if parent.exists() {
                         FileError::FileNotFound
                     } else {
@@ -61,7 +65,7 @@ impl AppError {
 
             // Out of storage space.
             std::io::ErrorKind::StorageFull => {
-                if let Some(disk) = DISK_MANAGER.iter().find(|disk| path.starts_with(disk.mount_point)) {
+                if let Some(disk) = DISK_MANAGER.iter().find(|disk| err_path.starts_with(disk.mount_point())) {
                     let total = disk.total_space() as i64;
                     let available = disk.available_space() as i64;
 
@@ -70,6 +74,8 @@ impl AppError {
                         used: total - available,
                         total_capacity: total,                  
                     }
+                } else {
+                    FileError::Unknown
                 }
             }
 
@@ -79,7 +85,7 @@ impl AppError {
 
             // Insufficient permissions.
             std::io::ErrorKind::PermissionDenied =>
-                FileError::PermissionDenied),
+                FileError::PermissionDenied,
 
             // Path contains illegal characters or is malformed.
             std::io::ErrorKind::InvalidInput =>
@@ -98,8 +104,8 @@ impl AppError {
                 FileError::NotADirectory,
 
             // Fallback: capture generic system error with path context.
-            _ => FileError::IOError(err.to_string(),
-        }
+            _ => FileError::IOError(err.to_string()),
+        };
 
         #[cfg(feature = "logging")]
         {
@@ -111,6 +117,6 @@ impl AppError {
             );
         }
 
-    FileOperationError {Some(error_type), Some(path)}
+    FileOperationError {error_type: Some(error_type), err_path: Some(err_path)}
     }
 }

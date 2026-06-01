@@ -14,30 +14,27 @@
 
 //! Converts `std::io::Error` into a custom error enum.
 
-#![forbid(warnings)]
-#![forbid(clippy::all)]
+#![deny(warnings)]
 #![forbid(clippy::pedantic)]
+#![forbid(clippy::all)]
+#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use super::Generic_errors::GenericError;
-
-/// Global read-only disk information manager for error diagnostics.
-static DISK_MANAGER: Lazy<Disk> = Lazy::new(|| {Disks::new_with_refreshed_list()});
+use crate::GenericError;
+use crate::AppError;
+use crate::FileError;
 
 impl AppError {
     /// Converts a standard std::io::Error into an enriched AppError.
     pub fn from_io_generic_error(err: Option<std::io::Error>) -> GenericError {
-        #[cfg(feature = "logging")]
-        let path_for_log = path.clone();
-
         let err = match err {
             Some(error) => error,
 
             None => return GenericError::NoneError,
-        }
+        };
 
         let error_type = match err.kind() {
             // Invalid data (e.g., malformed UTF-8)
@@ -53,19 +50,16 @@ impl AppError {
                 GenericError::UnexpectedEof,
 
             // Fallback: capture generic system error with path context.
-            _ => FileError::IOError(err.to_string(),
-        }
+            _ => FileError::IOError(err.to_string()),
+        };
 
         #[cfg(feature = "logging")]
         {
             tracing::error!(
-                path = %path_for_log.display(),
                 "Summary: {}\nDetail: {:#?}",
                     error_type,
                     err
             );
         }
-
-    FileOperationError {Some(error_type), Some(path)}
     }
 }

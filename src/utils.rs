@@ -12,18 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Aggregates and manages core business capabilities.
+//! Aggregates and manages core business utilities.
 
 #![forbid(warnings)]
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
+#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-/// File manipulation tools.
-pub mod file_tools;
+/// General CLI utilities.
+pub mod generic_utils_cli;
 
-/// Unicode processing tools.
-pub mod unicode_tools;
+/// General file utilities.
+pub mod file_utils;
+
+/// File CLI utilities.
+pub mod file_utils_cli;

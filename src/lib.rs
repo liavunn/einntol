@@ -14,9 +14,10 @@
 
 //! The core library of the Einntol program, responsible for the core logic.
 
-#![forbid(warnings)]
-#![forbid(clippy::all)]
-#![forbid(clippy::pedantic)]
+#![deny(warnings)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::all)]
+#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
@@ -28,54 +29,41 @@ pub mod errors;
 pub mod capabilities;
 /// Common data structures and global type definitions.
 pub mod types;
-/// 
+/// Utilities
 pub mod utils;
 
-use thiserror;
-use fastrand;
-use wyhash::WyHash;
+/// File processing capabilities.
+pub use crate::capabilities::file_tools;
 
-/// Re-expots the capabilities for convenient external access.
-///
-/// Can be accessed via the specialized capability modules within the capabilities namespace.
-pub use crate::capabilities::{
-    file_tool,
-//  todo: network_tool,
-};
+/// Application-specific error types.
+pub use crate::errors::AppError;
 
-/// Re-expots the error types for convenient external access.
-///
-/// Can be accessed via:
-/// `einntol::FileError`
-/// `einntol::GenericError`.
-pub use crate::errors::{
-    file_errors::FileError,
-    generic_errors::GenericError
-};
+/// Application-specific error types.
+pub use crate::errors::file_errors::{FileError, FileOperationError};
 
-/// 
-pub use crate::errors::{
-    file_error_conversion,
-    generic_error_conversion,
-};
-
-/// Re-exports the error types for convenient external access.
-///
-/// Can be accessed via `einntol::SafetyLevel`.
-pub use crate::types::SafetyLevel;
+/// Generic error types for miscellaneous operations.
+pub use crate::errors::generic_errors::GenericError;
 
 /// Safety levels used for validating file paths and permissions.
-///
-/// Can be accessed via `einntol::FileMode`.
+pub use crate::types::SafetyLevel;
+
+/// File tool mode.
 pub use crate::types::FileMode;
 
-/// Standardized result wrapper for all file-related operations.
-///
-/// Can be accessed via `einntol::Result`.
+/// File tool return.
 pub use crate::types::FileResult;
 
-/// 
+/// Passing pipeline messages.
 pub use crate::types::PipelineMessage;
 
-/// 
+/// Pipeline signal passing.
 pub use crate::types::PipelineStatus;
+
+/// Provides filesystem utility functions.
+pub use crate::utils::file_utils;
+
+/// Provides command-line interface utilities.
+pub use crate::utils::file_utils_cli;
+
+/// Provides generic utility functions for common tasks.
+pub use crate::utils::generic_utils_cli;
