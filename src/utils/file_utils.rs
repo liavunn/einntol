@@ -36,9 +36,10 @@ use crate::SafetyLevel;
 use crate::FileMode;
 use crate::FileResult;
 use crate::PipelineMessage;
+use crate::PipelineStatus;
 
 struct FileVisitor {
-    name: String,
+    name: Arc<str>,
     mode: FileMode,
     stop_signal: Arc<AtomicBool>,
     tx: Sender<PipelineMessage>
@@ -86,10 +87,6 @@ impl ParallelVisitor for FileVisitor {
 
         return WalkStaate::Continue;        
     }
-
-    fn finished(&mut self, state: WalkState) {
-        self.tx.send(PipelineMessage::signal::Finished).unwrap();
-    }
 }
 
 /// Find files in the input path that match the specified pattern and filename.
@@ -112,6 +109,7 @@ pub fn find_paths(
     tx: Sender<PipelineMessage>
 ) {
     let mut builder = WalkBuilder::new(determined_paths); 
+    let arc_str_name = Arc::from(name);
 
     // Add paths to the builder.
     for path in determined_paths.iter_into().skip(1) {
@@ -134,16 +132,18 @@ pub fn find_paths(
 
     let parallel_walker = builder.build_parallel();
  
+    tx.send(PipelineMessage::Signal(PipelineStatus::Starting)).unwrap();
+
     parallel_walker.visit(|| {
         FileVisitor {
             stop_signal: Arc::clone(&stop_signal);
             tx: tx.clone();
             mode: mode.clone();
-            name: name.to_string();
+            name: Arc::clone(&arc_str_name);
         }
-
-
     }
+
+    tx.send(PipelineMessage::signal(PipelineStatus::Finished)).unwrap();
 }
 
 /// Validates file entries based on user-defined filtering modes.

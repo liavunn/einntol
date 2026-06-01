@@ -73,3 +73,9 @@ pub use crate::types::FileMode;
 ///
 /// Can be accessed via `einntol::Result`.
 pub use crate::types::FileResult;
+
+/// 
+pub use crate::types::PipelineMessage;
+
+/// 
+pub use crate::types::PipelineStatus;

@@ -43,26 +43,29 @@ use crate::types::FileResult;
         return;
     }
 
-    let mut pending_paths = Vec::with_capacity(64);
+    const batch_size = 64;
+    let mut pending_paths = Vec::with_capacity(batch_size);
+    let mut processed_count: i64 = 0;
 
     for input_path in input_vec_path.into_iter() {
         if stop_signal.load(Ordering::SeqCst) == true {
             tx.send(PipelineMessage::Singnal(
-                PipelineStatus::Finished
+                PipelineStatus::Aborted
             )).unwarp();
         }
 
-        if pending_paths.len() == 64 {
+        if pending_paths.len() == batch_size {
+            processed_count += batch_size;
             tx.send(PipelineMessage::Singnal(
-                PipelineStatus::Pregress
+                PipelineStatus::Pregress(Some(processed_count))
             )).unwarp();
 
             find_paths(pending_paths, name, mode.clone());
 
-            pending_paths = Vec::with_capacity(64);
+            pending_paths = Vec::with_capacity(batch_size);
         }
 
-        let path_status = std::fs::metadata(&input_path)
+        let path_status = std::fs::metadata(&inpnut_path)
             .map(|_| input_path)
 
         let Ok(current_path) = path_status else {
@@ -82,8 +85,9 @@ use crate::types::FileResult;
     }
 
     if !pending_paths.is_empty() {
+        processed_count += pending_paths.len();
         tx.send(PipelineMessage::Singnal(
-            PipelineStatus::Pregress
+            PipelineStatus::Pregress(Some(processed_count))
         ));
         find_paths(pending_paths);
     }

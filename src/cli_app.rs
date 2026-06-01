@@ -40,6 +40,8 @@ use crate::from_io_generic_error;
 use crate::SafetyLevel;
 use crate::FileMode;
 use crate::FileResult;
+use crate::PipelineMessage;
+use crate::PipelineStatus;
 
 /// Main
 fn main() -> miette::Result<()> {
@@ -78,7 +80,6 @@ fn main() -> miette::Result<()> {
         while Ok(message) = rx.revc {
             match message {
                 PipelineMessage::Data(result) => {
-                    println!("Starting search...");
                     if let Some(path) {
                         println!("Found: ");
                         println!("{}", path);
@@ -90,12 +91,22 @@ fn main() -> miette::Result<()> {
                   }
                 }
 
-                PipelineMessage::Signal(status) => 
+                PipelineMessage::Signal(status) => {
                     match status {
-                        |||
+                        PipelineStatus::Starting => 
+                            println!("Starting search..."),
+
+                        PipelineStatus::Progress(count) => 
+                            println!("Items found: [{}]", count),
+
+                        PipelineStatus::Aborted =>
+                            println!("Search aborted.");
+
+                        PipelineMessage::Finished =>
+                            println!("Search completed."),
                     }
+                }
             }
         }
-        k
     }
 }

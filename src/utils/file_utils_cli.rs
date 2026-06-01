@@ -156,7 +156,7 @@ pub fn get_mode() {
 ///
 /// # Returns
 /// * Returns nothing.
-pub fn monitor_commands(stop_signal: Arc(AtomicBool)) {
+pub fn monitor_commands(stop_signal: Arc(AtomicBool), tx: Sender<PipelineMessage>) {
     let input = String::new();
 
     loop{
@@ -173,6 +173,7 @@ pub fn monitor_commands(stop_signal: Arc(AtomicBool)) {
         match input_trim {
             stop => {
                 stop_signal.store(true, Ordering::SeqCst);
+                tx.send(PipelineMessage::Signal(PipelineStatus::Aborted)).unwrap();
             }
 
             _ => {

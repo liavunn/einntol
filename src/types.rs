@@ -65,13 +65,16 @@ pub enum PipelineMessage {
 
 /// Defines the operational states of the pipeline lifecycle.
 pub enum PipelineStatus {
-    /// The pipeline is initializing.
+    /// Initializing the process.
     Starting,
-    /// The pipeline is actively running.
-    Running,
-    /// Indicating ongoing search progress.
-    Progress,
-    /// The pipeline execution completely finished.
+    
+    /// Indicates ongoing progress, carrying an optional i64 translation.
+    Progress(Option<i64>),
+
+    /// Execution was aborted.
+    Aborted,
+    
+    /// Execution finished successfully.
     Finished,
 }
 
