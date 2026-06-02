@@ -77,11 +77,11 @@ use crate::file_utils::find_paths;
 
         let Ok(current_path) = path_status else {
             let err = path_status.unwrap_err();
-            let app_err = AppError::from_io_file_error(err, input_path);
+            let app_err = AppError::from_io_file_error(err, input_path, None);
             tx.send(PipelineMessage::Data(
                 FileResult {
                     path: None,
-                    error: app_err
+                    error: app_err,
                 }
             )).unwrap();
 

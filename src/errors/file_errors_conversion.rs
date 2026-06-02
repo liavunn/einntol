@@ -36,16 +36,22 @@ static DISK_MANAGER: Lazy<Disks> = Lazy::new(|| {Disks::new_with_refreshed_list(
 
 impl AppError {
     /// Converts a standard std::io::Error into an enriched AppError.
-    pub fn from_io_file_error(err: Option<std::io::Error>, err_path: PathBuf) -> FileOperationError {
+    pub fn from_io_file_error(err: Option<std::io::Error>, err_path: PathBuf, err_reason: Option<String>) -> FileOperationError {
         #[cfg(feature = "logging")]
         let path_for_log = err_path.clone();
+
+        let err_reason = match err_reason {
+            Some(rea) => rea,
+
+            None => {"Unknown".to_string()},
+        };
 
         let err = match err {
             Some(error) => error,
 
             None => return FileOperationError {
                 error_type: Some(FileError::NoneError),
-                path: None
+                path: None,
             }
         };
 
@@ -81,7 +87,9 @@ impl AppError {
 
             // Data is corrupted or reached unexpected EOF.
             std::io::ErrorKind::InvalidData | std::io::ErrorKind::UnexpectedEof =>
-                FileError::FileCorrupted,
+                FileError::FileCorrupted {
+                    reason: err_reason
+                },
 
             // Insufficient permissions.
             std::io::ErrorKind::PermissionDenied =>
@@ -104,7 +112,7 @@ impl AppError {
                 FileError::NotADirectory,
 
             // Fallback: capture generic system error with path context.
-            _ => FileError::IOError(err.to_string()),
+            _ => FileError::IOError(err_reason),
         };
 
         #[cfg(feature = "logging")]
@@ -117,6 +125,6 @@ impl AppError {
             );
         }
 
-    FileOperationError {error_type: Some(error_type), err_path: Some(err_path)}
+    FileOperationError {error_type: Some(error_type), path: Some(err_path)}
     }
 }

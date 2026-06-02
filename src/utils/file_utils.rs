@@ -50,14 +50,23 @@ impl ParallelVisitor for FileVisitor {
         }
 
         let Ok(entry) = entry else {
-            let err = entry.unwrap_err();
-            let err_path = err.path().map(|path| path.to_path_buf().unwrap_or_default());
-            let app_err = AppError::from_io_file_error(Some(std::io::Error::from(err)), err_path);
+            let err_reason = entry.unwrap_err().to_string();
+            let err_path = PathBuf::new();
+            let app_err = AppError::from_io_file_error(
+                Some(
+                    std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        err_reason.clone()
+                    )
+                ),
+                err_path,
+                Some(err_reason)
+            );
 
             self.tx.send(PipelineMessage::Data(
                 FileResult {
                     paths: None,
-                    errors: Some(app_err),
+                    errors: Some(app_err.into()),
                 })).unwrap();
 
             return WalkState::Continue;
@@ -73,6 +82,8 @@ impl ParallelVisitor for FileVisitor {
                         errors: None,
                     })).unwrap();
                 }
+
+                WalkState::Continue
             }
 
             Err(app_err) => {
@@ -82,7 +93,7 @@ impl ParallelVisitor for FileVisitor {
                     errors: Some(app_err),
                 })).unwrap();
             
-                return WalkStaate::Continue;
+                WalkState::Continue
             }
         }
     }
@@ -117,7 +128,7 @@ pub fn find_paths(
 
     // Check if hidden files should be included.
     if mode.contains(FileMode::WITH_HIDDEN) {
-        builder = builder.hidden(false);
+        builder.hidden(false);
     }
 
     // Check if unrestricted recursion is enabled.
@@ -127,7 +138,7 @@ pub fn find_paths(
         Some(3)
     };
 
-    builder = builder.max_depth(depth);
+    builder.max_depth(depth);
 
     let parallel_walker = builder.build_parallel();
  
@@ -161,13 +172,13 @@ fn filter_ignore_match(entry: &DirEntry, name: &str, mode: &FileMode) -> Result<
     let entry_type = entry.file_type();
 
     let entry_type = match entry_type {
-        Some(ent_type) => ent_type,
+        Some(ent_type) => Ok(ent_type),
 
         None => {
-            let app_err = AppError::from_io_file_error(None, entry.path());
-            Err(app_err);
+            let app_err = AppError::from_io_file_error(None, entry.path().to_path_buf(), None);
+            Err(app_err)
         }
-    };
+    }?;
 
     // NONE: Match regular files only; skip hidden files, directories, and paths ignored by .gitignore.
     if mode.contains(FileMode::NONE) && !entry_type.is_file() {

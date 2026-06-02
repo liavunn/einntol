@@ -31,8 +31,7 @@ use wyhash;
 use crossbeam_channel::bounded;
 
 use crate::utils::{
-    file_errors::from_io_file_error,
-    generic_errors::from_io_generic_error
+    generic_utils_cli,
 };
 use crate::FileError;
 use crate::GenericError:
@@ -46,16 +45,17 @@ use crate::PipelineStatus;
 
 /// Main
 fn main() -> miette::Result<()> {
-    let (tx, rx) = bounded<PipelineMesage>(2000);
+    let (tx, rx) = bounded<PipelineMessage>(2000);
 
     println!("Hi, einntol initialized.");
 
     println!("Entre \'bye\' to quit.");
 
     scope (|s| {
-        s.spawn {|| {
+        s.spanw {|| {
             let counter = Arc::new(AtomicUsize::new(0));
             let unchecked_paths = get_unchecked_paths_cli();
+            let mode = get_mode();
 
             s.spanw {|| {
                 monitor_commands(counter);
@@ -67,13 +67,13 @@ fn main() -> miette::Result<()> {
                         println!("Bad path: {}", unchecked_path);
                     },
 
-                _ => println!("All paths are valid.");,
+                _ => println!("All paths are valid."),
             }
 
             match unchecked_paths.paths {
                 Some(paths) => scan_and_find(paths, name, mode, counter, tx);
 
-                _ => printfln!("No valid paths available.");
+                _ => println!("No valid paths available."),
             }
         }}
 
@@ -81,15 +81,15 @@ fn main() -> miette::Result<()> {
         while Ok(message) = rx.revc {
             match message {
                 PipelineMessage::Data(result) => {
-                    if let Some(path) {
+                    if let Some(message_path){
                         println!("Found: ");
-                        println!("{}", path);
+                        println!("{}", message_path);
                     }
                 
-                  if let Some(error) {
-                      println!("Error: ");
-                      println!("{}", error);
-                  }
+                    if let Some(error) {
+                        println!("Error: ");
+                        println!("{}", error);
+                    }
                 }
 
                 PipelineMessage::Signal(status) => {
@@ -101,7 +101,7 @@ fn main() -> miette::Result<()> {
                             println!("Items found: [{}]", count),
 
                         PipelineStatus::Aborted =>
-                            println!("Search aborted.");
+                            println!("Search aborted."),
 
                         PipelineMessage::Finished =>
                             println!("Search completed."),

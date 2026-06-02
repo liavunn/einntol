@@ -25,7 +25,6 @@
 
 use crate::GenericError;
 use crate::AppError;
-use crate::FileError;
 
 impl AppError {
     /// Converts a standard std::io::Error into an enriched AppError.
@@ -50,7 +49,7 @@ impl AppError {
                 GenericError::UnexpectedEof,
 
             // Fallback: capture generic system error with path context.
-            _ => FileError::IOError(err.to_string()),
+            _ => Generic::IOError(err.to_string()),
         };
 
         #[cfg(feature = "logging")]
@@ -61,5 +60,7 @@ impl AppError {
                     err
             );
         }
+
+        error_type
     }
 }

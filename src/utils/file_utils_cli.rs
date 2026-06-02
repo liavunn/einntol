@@ -107,7 +107,7 @@ pub fn get_mode() {
 
         input_mode = input_mode.trim().to_string();
 
-        match input_mode.to_byte.get(0) {
+        match input_mode.to_byte().get(0) {
             None => {
                 break FileMode::NONE;
             },
@@ -121,7 +121,7 @@ pub fn get_mode() {
             },
 
             Some(b'D') => {
-               break FileMode::WIRH_DIR;
+               break FileMode::WITH_DIR;
             },
 
             Some(b'C') => {

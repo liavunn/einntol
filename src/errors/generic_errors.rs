@@ -46,5 +46,5 @@ pub enum GenericError {
 
     /// Is a None Error.
     #[error("The error is None")]
-    NoneErrro,
+    NoneError,
 }   
