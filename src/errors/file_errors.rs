@@ -27,16 +27,27 @@ use std::path::PathBuf;
 
 use thiserror;
 
-/// 
-#[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic)]
+/// Specific error information during file operations.
+#[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic, Clone)]
 #[error("File error at {path:#?} : {error_type:#?}")]
 pub struct FileOperationError {
-    error_type: Option<FileError>,
-    path: Option<PathBuf>,
+    /// Specific error type.
+    pub error_type: Option<FileError>,
+    /// File path where the error occurred.
+    pub path: Option<PathBuf>,
+}
+
+impl From<FileError> for FileOperationError {
+    fn from(err: FileError) -> Self {
+        Self {
+            error_type: Some(err),
+            path: None,
+        }
+    }
 }
 
 /// File-related error types.
-#[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic)]
+#[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic, Clone)]
 pub enum FileError {
     /// The file at the specified path does not exist.
     #[error("The file not found.")]
@@ -49,6 +60,7 @@ pub enum FileError {
     /// The file at the specified path is corrupted.
     #[error("The file corrupted: {reason}")]
     FileCorrupted {
+        /// Error details accompanying file corruption.
         reason: String,
     },
 
@@ -75,8 +87,11 @@ pub enum FileError {
     /// Insufficient storage space.
     #[error("Insufficient storage space, {remaining} bytes remaining, ({used}/{total_capacity}) bytes used")]
     InsufficientStorage{
+        /// Number of bytes remaining on the storage device.
         remaining: i64,
+        /// Number of bytes currently used.  
         used: i64,
+        /// Total storage capacity in bytes.
         total_capacity: i64,
     },
 

@@ -69,12 +69,13 @@ pub enum PipelineMessage {
 }
 
 /// Defines the operational states of the pipeline lifecycle.
+#[derive(Debug, Clone)]
 pub enum PipelineStatus {
     /// Initializing the process.
     Starting,
     
     /// Indicates ongoing progress, carrying an optional i64 translation.
-    Progress(Option<i64>),
+    Progress(ProgressData),
 
     /// Execution was aborted.
     Aborted,
@@ -83,14 +84,24 @@ pub enum PipelineStatus {
     Finished,
 }
 
+/// Data carrier for pipeline progress
+#[derive(Debug, Clone)]
+pub enum ProgressData {
+    /// Number of processed items.
+    Size(usize),
+
+    /// Total number of items.
+    TotalSize(usize),
+}
+
 /// Represents the combined results of file discovery and validation.
 #[derive(Debug, Clone)]
 pub struct FileResult {
     /// List of successfully discovered or validated file paths.
-    pub paths: Option<PathBuf>,
+    pub paths: Option<Vec<PathBuf>>,
 
     /// Collection of non-fatal errors encountered during the execution.
-    pub errors: Option<AppError>,
+    pub errors: Option<Vec<AppError>>,
 }
 
 /// Represents the safety assessment of a path, including its risk level and privilege requirement.
@@ -141,9 +152,9 @@ impl SafetyLevel {
         let absolute_path = path.canonicalize().map_err(|err| AppError::from_io_file_error(Some(err), path.to_path_buf(), None))?;
 
         let first_component = absolute_path
-            .components
+            .components()
             .nth(1)
-            .and_then(|com|as_os_str().to_str());
+            .and_then(|com| com.as_os_str().to_str());
 
         let level = match first_component {
             Some("boot" | "dev" |"proc" | "sys" | "run" | "lib" | "lib64") => 
@@ -154,8 +165,6 @@ impl SafetyLevel {
             Some("home") => SafetyLevel::Warning {needs_su: false},
 
             _ => SafetyLevel::Safe {needs_su: false},
-
-            None => SafetyLevel::Safe {needs_su: false},
         };
 
         Ok(level)

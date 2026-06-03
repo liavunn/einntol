@@ -34,7 +34,7 @@ use crate::utils::{
     generic_utils_cli,
 };
 use crate::FileError;
-use crate::GenericError:
+use crate::GenericError;
 use crate::from_io_file_error;
 use crate::from_io_generic_error;
 use crate::SafetyLevel;

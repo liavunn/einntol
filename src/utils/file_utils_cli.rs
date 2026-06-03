@@ -54,16 +54,16 @@ pub fn get_unchecked_paths_cli() -> FileResult {
     let mut paths_errors: Vec<AppError> = Vec::new();
 
     loop { 
-        if unchecked_input_string.len == MAX_PATH_NUM {
+        if unchecked_input_string.len() == MAX_PATH_NUM {
             println!("Path limit reached.");
             break;
         }
 
         user_input.clear();
         if let Err(err) = io::stdin().read_line(&mut user_input) {
-            let app_err = AppError::from_io_generic_error(Some(err), user_input.clone());
+            let app_err = AppError::from_io_generic_error(Some(err), None);
 
-            paths_errors.push(app_err);
+            paths_errors.push(app_err.into());
 
             continue;
         }
@@ -91,23 +91,23 @@ pub fn get_unchecked_paths_cli() -> FileResult {
 /// # Returns
 /// * Returns a `FileMode` representing the selected mode.
 /// * Defaults to `FileMode::NONE` if no input is provided.
-pub fn get_mode() {
+pub fn get_mode() -> (FileMode, Option<Vec<AppError>>) {
     println!("Please enter mode(leave blank for none mode)");
     println!("N: none, H: with-hidden, D: only-directory, C: case-insensitive,\n
         U: unrestricted recursion, F: fuzzy, A: all");
 
-    let input_mode = String::new();
-    let mut app_err: AppError;
+    let mut input_mode = String::new();
+    let mut app_err: Option<Vec<AppError>> = None;
 
     let mode = loop{
         input_mode.clear();
         if let Err(err) = io::stdin().read_line(&mut input_mode) {
-            app_err = AppError::from_io_generic_error(Some(err), input_mode);
+            app_err = Some(vec![AppError::from_io_generic_error(Some(err), None).into()]);
         }
 
         input_mode = input_mode.trim().to_string();
 
-        match input_mode.to_byte().get(0) {
+        match input_mode.as_bytes().get(0) {
             None => {
                 break FileMode::NONE;
             },
@@ -146,5 +146,9 @@ pub fn get_mode() {
         }
     };
 
-    return (mode, app_err); 
+    match app_err {
+        Some(err) => (mode, Some(err)),
+
+        None => (mode, None),
+    }
 }

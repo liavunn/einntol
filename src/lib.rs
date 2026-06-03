@@ -59,6 +59,9 @@ pub use crate::types::PipelineMessage;
 /// Pipeline signal passing.
 pub use crate::types::PipelineStatus;
 
+/// Data carrier for pipeline progress.
+pub use crate::types::ProgressData;
+
 /// Provides filesystem utility functions.
 pub use crate::utils::file_utils;
 

@@ -48,11 +48,11 @@ use thiserror;
 //  }
 
 /// The top-level error type that aggregates all sub-module errors.
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Clone)]
 pub enum AppError {
     /// Represents a file system error.
     #[error(transparent)]
-    File(#[from] file_error::FileOperationError),
+    File(#[from] file_errors::FileOperationError),
 
     /// 
     #[error(transparent)]

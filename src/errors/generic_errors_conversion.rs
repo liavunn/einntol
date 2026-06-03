@@ -27,12 +27,16 @@ use crate::GenericError;
 use crate::AppError;
 
 impl AppError {
-    /// Converts a standard std::io::Error into an enriched AppError.
-    pub fn from_io_generic_error(err: Option<std::io::Error>) -> GenericError {
-        let err = match err {
-            Some(error) => error,
+    /// Converts a standard `std::io::Error` into an enriched `AppError`.
+    pub fn from_io_generic_error(err: Option<std::io::Error>, err_reason: Option<String>) -> GenericError {
+        let err_reason = match err_reason {
+            Some(rea) => rea,
 
-            None => return GenericError::NoneError,
+            None => {"Unknown".to_string()},
+        };
+
+        let Some(err) = err  else {
+            return GenericError::NoneError;
         };
 
         let error_type = match err.kind() {
@@ -49,7 +53,7 @@ impl AppError {
                 GenericError::UnexpectedEof,
 
             // Fallback: capture generic system error with path context.
-            _ => Generic::IOError(err.to_string()),
+            _ => GenericError::IOError(err_reason),
         };
 
         #[cfg(feature = "logging")]

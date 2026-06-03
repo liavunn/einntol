@@ -26,17 +26,17 @@
 use thiserror;
 
 /// Generic error types.
-#[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic)]
+#[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic, Clone)]
 pub enum GenericError {
-    /// 
+    /// Invalid input provided.
     #[error("Invalid Input")]
     InvalidData,
 
-    /// 
+    /// The operation was interrupted.
     #[error("Interrupted operation")]
     Interrupted,
 
-    /// 
+    /// An unexpected end-of-file was reached.
     #[error("Unexpected EOF")]
     UnexpectedEof,
 

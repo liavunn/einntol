@@ -25,17 +25,19 @@
 
 use std::path::PathBuf;
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use sysinfo::Disks;
 
 use crate::{FileOperationError, FileError};
 use crate::AppError;
 
 /// Global read-only disk information manager for error diagnostics.
-static DISK_MANAGER: Lazy<Disks> = Lazy::new(|| {Disks::new_with_refreshed_list()});
+static DISK_MANAGER: LazyLock<Disks> = LazyLock::new(|| {
+    Disks::new_with_refreshed_list()
+});
 
 impl AppError {
-    /// Converts a standard std::io::Error into an enriched AppError.
+    /// Converts a standard `std::io::Error` into an enriched `AppError`.
     pub fn from_io_file_error(err: Option<std::io::Error>, err_path: PathBuf, err_reason: Option<String>) -> FileOperationError {
         #[cfg(feature = "logging")]
         let path_for_log = err_path.clone();
@@ -46,13 +48,11 @@ impl AppError {
             None => {"Unknown".to_string()},
         };
 
-        let err = match err {
-            Some(error) => error,
-
-            None => return FileOperationError {
+        let Some(err) = err else {
+            return FileOperationError {
                 error_type: Some(FileError::NoneError),
-                path: None,
-            }
+                path: None,  
+            };
         };
 
         let error_type = match err.kind() {
@@ -72,8 +72,13 @@ impl AppError {
             // Out of storage space.
             std::io::ErrorKind::StorageFull => {
                 if let Some(disk) = DISK_MANAGER.iter().find(|disk| err_path.starts_with(disk.mount_point())) {
-                    let total = disk.total_space() as i64;
-                    let available = disk.available_space() as i64;
+                    let total = disk.total_space()
+                        .try_into()
+                        .unwrap_or(i64::MAX);
+
+                    let available = disk.available_space()
+                        .try_into()
+                        .unwrap_or(i64::MAX);
 
                     FileError::InsufficientStorage {
                         remaining: available,
