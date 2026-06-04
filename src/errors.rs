@@ -54,7 +54,7 @@ pub enum AppError {
     #[error(transparent)]
     File(#[from] file_errors::FileOperationError),
 
-    /// 
+    /// Represents a generic error.
     #[error(transparent)]
     Generic(#[from] generic_errors::GenericError),
 

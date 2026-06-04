@@ -2,21 +2,25 @@
 name = "einntol"
 version = "0.1.0"
 edition = "2024"
+authors = ["liavunn <liavunn@users.noreply.github.com>"]
+description = "A universal toolkit"
+license = "Apatch-2.0"
+repository = "https://github.com/liavunn/einntol"
+keywords = ["cli", "utility", "rust"]
+categories = ["command-line-utilities"]
 
 [dependencies]
+miette = "7.6"
 fastrand = "2"
 thiserror = "2.0"
 wyhash = "0.6"
-miette = {version = "7", features = ["fancy"]}
-tauri = "2"
 sysinfo = "0.38"
-once_cell = "1"
-tracing = {version = "0.1", optional = true}
-tracing-appender = {version = "0.2", optional = true}
+tracing = { version = "0.1", optional = true }
+tracing-appender = { version = "0.2", optional = true }
 ignore = "0.4"
 bitflags = "2"
 crossbeam-channel = "0.5"
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 
 [features]
 default = ["logging"]

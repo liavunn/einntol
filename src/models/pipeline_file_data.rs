@@ -12,20 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Aggregates and manages core business capabilities.
+//! Global configuration modes and flag definitions.
 
-#![forbid(warnings)]
-#![forbid(clippy::all)]
-#![forbid(clippy::pedantic)]
+#![deny(warnings)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::all)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-/// File manipulation tools.
-pub mod file_tools;
+use std::path::PathBuf;
 
-/// Unicode processing tools.
-pub mod unicode_tools;
+/// Represents the resulting paths from file discovery.
+#[derive(Debug, Clone)]
+pub struct FileResultPath {
+    /// List of successfully discovered or validated file paths.
+    pub paths: Vec<PathBuf>,
+}
+
+/// Represents file discovery errors.
+pub struct FileResultError {
+    /// Collection of non-fatal errors encountered during the execution.
+    pub errors: Vec<AppError>,
+}
+
 

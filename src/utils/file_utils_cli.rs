@@ -23,12 +23,8 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use std::collections::HashSet;
-use std::hash::BuildHasherDefault;
 use std::io;
 use std::path::PathBuf;
-
-use wyhash::WyHash;
 
 use crate::AppError;
 use crate::FileMode;
@@ -40,14 +36,13 @@ use crate::FileResult;
 /// * No arguments required.
 ///
 /// # Returns
-/// * REturns retrieved unchecked paths.
+/// * Returns retrieved unchecked paths.
+#[must_use]
 pub fn get_unchecked_paths_cli() -> FileResult {
     const MAX_PATH_NUM: usize = 2000;
 
     println!("Please enter path(leave blank for current directory)");
     println!("Enter \"end\" to finish: ");
-
-    type WyHashSet<T> = HashSet<T, BuildHasherDefault<WyHash>>;
 
     let mut user_input = String::new();
     let mut unchecked_input_string: Vec<String> = Vec::new();
@@ -75,12 +70,13 @@ pub fn get_unchecked_paths_cli() -> FileResult {
         unchecked_input_string.push(user_input_trim);
     }
 
-    let unchecked_pathbuf: Vec<PathBuf> = unchecked_input_string
-        .into_iter()
-        .map(|str| PathBuf::from(str))
-        .collect();
+    let mut unchecked_pathbufs: Vec<PathBuf> = Vec::new();
 
-    FileResult {paths: Some(unchecked_pathbuf), errors: Some(paths_errors)}
+    for str in unchecked_input_string{
+        unchecked_pathbufs.push(PathBuf::from(str));
+    }
+
+    FileResult {paths: Some(unchecked_pathbufs), errors: Some(paths_errors)}
 }
 
 /// Get a mode from the user.
@@ -91,7 +87,8 @@ pub fn get_unchecked_paths_cli() -> FileResult {
 /// # Returns
 /// * Returns a `FileMode` representing the selected mode.
 /// * Defaults to `FileMode::NONE` if no input is provided.
-pub fn get_mode() -> (FileMode, Option<Vec<AppError>>) {
+#[must_use]
+pub fn get_file_mode() -> (FileMode, Option<Vec<AppError>>) {
     println!("Please enter mode(leave blank for none mode)");
     println!("N: none, H: with-hidden, D: only-directory, C: case-insensitive,\n
         U: unrestricted recursion, F: fuzzy, A: all");
@@ -107,12 +104,8 @@ pub fn get_mode() -> (FileMode, Option<Vec<AppError>>) {
 
         input_mode = input_mode.trim().to_string();
 
-        match input_mode.as_bytes().get(0) {
-            None => {
-                break FileMode::NONE;
-            },
-
-            Some(b'N') => {
+        match input_mode.as_bytes().first() {
+            None | Some(b'N') => {
                 break FileMode::NONE;
             }, 
 
@@ -141,7 +134,7 @@ pub fn get_mode() -> (FileMode, Option<Vec<AppError>>) {
             },
 
             _ => {
-                println!("Invalid input. Please try again.")
+                println!("Invalid input. Please try again.");
             },
         }
     };

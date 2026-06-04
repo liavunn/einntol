@@ -41,7 +41,10 @@ use crate::PipelineStatus;
 ///
 /// # Returns
 /// * Returns nothing.
-pub fn monitor_commands(stop_signal: Arc<AtomicBool>, tx: Sender<PipelineMessage>) {
+///
+/// # Panics
+/// * This function will panic if the pipeline message sending fails.
+pub fn monitor_commands(stop_signal: &Arc<AtomicBool>, tx: &Sender<PipelineMessage>) {
     let mut input = String::new();
 
     loop{
@@ -58,7 +61,9 @@ pub fn monitor_commands(stop_signal: Arc<AtomicBool>, tx: Sender<PipelineMessage
         match input_trim {
             "stop" => {
                 stop_signal.store(true, Ordering::SeqCst);
-                tx.send(PipelineMessage::Signal(PipelineStatus::Aborted)).unwrap();
+                tx.send(PipelineMessage::Signal(
+                    PipelineStatus::Aborted
+                )).unwrap();
             }
 
             _ => {
@@ -66,4 +71,28 @@ pub fn monitor_commands(stop_signal: Arc<AtomicBool>, tx: Sender<PipelineMessage
             }
         }
     }
+}
+
+/// Get a name from the user.
+///
+/// # Arguments
+/// * No arguments required.
+///
+/// # Returns
+/// * Returns a String.
+/// 
+/// # Errors
+/// * This function will return an error if the standard input.
+pub fn get_name() -> Result<String, AppError> {
+    let mut input_name = String::new();
+
+    println!("Please enter name:");
+
+    if let Err(err) = io::stdin().read_line(&mut input_name) {
+        AppError::from_io_generic_error(Some(err), None);
+    }
+
+    let input_name = input_name.trim();
+
+    Ok(input_name.to_string())
 }

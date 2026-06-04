@@ -23,11 +23,14 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
+use std::collections::HashSet;
+use std::hash::BuildHasherDefault;
 use std::path::PathBuf;
 use std::sync::{Arc, atomic::AtomicBool};
 use std::sync::atomic::Ordering;
 
 use crossbeam_channel::Sender;
+use wyhash::WyHash;
 
 use crate::AppError;
 use crate::FileMode;
@@ -36,6 +39,9 @@ use crate::PipelineMessage;
 use crate::PipelineStatus;
 use crate::ProgressData;
 use crate::file_utils::find_paths;
+
+type WyHashSet<T> = HashSet<T, BuildHasherDefault<WyHash>>;
+
 
 /// Gets the path from user input.
 ///
@@ -52,18 +58,30 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
     const BATCH_SIZE: usize = 64;
 
     if input_vec_paths.is_empty() {
-        tx.send(PipelineMessage::Signal(PipelineStatus::Finished)).unwrap();
+        tx.send(PipelineMessage::Signal(
+            PipelineStatus::Finished
+            )).unwrap();
+
         return;
     }
 
+    let mut seen: WyHashSet<PathBuf> = WyHashSet::default();
+    let mut seen_paths = Vec::new();
     let mut pending_paths = Vec::with_capacity(BATCH_SIZE);
     let mut processed_count: usize = 0;
 
-    for input_path in input_vec_paths {
+    for deduplicating_input_path in input_vec_paths {
+        if seen.insert(deduplicating_input_path.clone()) {
+            seen_paths.push(deduplicating_input_path);
+        }
+    }
+
+    for input_path in seen_paths {
         if stop_signal.load(Ordering::SeqCst) {
             tx.send(PipelineMessage::Signal(
                 PipelineStatus::Aborted
             )).unwrap();
+            return;
         }
 
         if pending_paths.len() == BATCH_SIZE {

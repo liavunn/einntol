@@ -12,20 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Aggregates and manages core business capabilities.
+//! Global configuration modes and flag definitions.
 
-#![forbid(warnings)]
-#![forbid(clippy::all)]
-#![forbid(clippy::pedantic)]
+#![deny(warnings)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::all)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-/// File manipulation tools.
-pub mod file_tools;
+use std::path::PathBuf;
 
-/// Unicode processing tools.
-pub mod unicode_tools;
+use crate::errors::AppError;
+use crate::models::file_pipeline_data::{
+    FileResultPaths,
+    FileResultErrors,
+};
 
+pub enum FileResultOutcome {
+    paths(FileResultPaths),
+
+    errors(FileResultErrors),
+}
