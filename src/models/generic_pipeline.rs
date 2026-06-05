@@ -23,14 +23,13 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use std::path::PathBuf;
+use crate::pipeline_outcome::ResultOutcome;
 
-use crate::AppError;
 /// Represents a message sent through the pipeline, carrying either data or a control signal.
 #[derive(Debug, Clone)]
 pub enum PipelineMessage {
     /// `self::File`(Contains the processed file results and any associated non-fatal errors.
-    Data(FileResult),
+    Data(ResultOutcome),
 
     /// Carries pipeline lifecycle and progress status signals
     Signal(PipelineStatus),

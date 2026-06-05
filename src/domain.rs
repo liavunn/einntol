@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Global configuration modes and flag definitions.
+//! 
 
 #![deny(warnings)]
 #![deny(clippy::pedantic)]
@@ -23,16 +23,4 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use std::path::PathBuf;
 
-use crate::errors::AppError;
-use crate::models::file_pipeline_data::{
-    FileResultPaths,
-    FileResultErrors,
-};
-
-pub enum FileResultOutcome {
-    paths(FileResultPaths),
-
-    errors(FileResultErrors),
-}

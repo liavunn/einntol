@@ -77,7 +77,7 @@ impl SafetyLevel {
     /// # Errors
     /// * Returns an `AppError` if the path component cannot be converted
     ///   to a string or if the path is invalid.
-    pub fn path_safetylevel(path: impl AsRef<std::path::Path>) -> Result<Self, AppError> {
+    pub fn linux_path_safetylevel(path: impl AsRef<std::path::Path>) -> Result<Self, AppError> {
         let path = path.as_ref();
 
         let absolute_path = path.canonicalize().map_err(|err| AppError::from_io_file_error(Some(err), path.to_path_buf(), None))?;

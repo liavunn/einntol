@@ -27,10 +27,16 @@
 pub mod errors;
 /// Core business logic and system-level functional capabilities.
 pub mod capabilities;
-/// Common data structures and global type definitions.
-pub mod types;
 /// Utilities
 pub mod utils;
+/// 
+pub mod domain;
+/// 
+pub mod security;
+/// 
+pub mod models;
+/// 
+pub mod modes;
 
 /// File processing capabilities.
 pub use crate::capabilities::file_tools;
@@ -45,22 +51,25 @@ pub use crate::errors::file_errors::{FileError, FileOperationError};
 pub use crate::errors::generic_errors::GenericError;
 
 /// Safety levels used for validating file paths and permissions.
-pub use crate::types::SafetyLevel;
+pub use crate::security::file_safe::SafetyLevel;
 
 /// File tool mode.
-pub use crate::types::FileMode;
+pub use crate::modes::file_modes::FileMode;
 
-/// File tool return.
-pub use crate::types::FileResult;
+/// Represents the paths resulting from file discovery.
+pub use crate::models::file_pipeline_data::FileResultPaths;
+
+/// Represents the collection of errors encountered during file discovery.
+pub use crate::models::file_pipeline_data::FileResultErrors;
 
 /// Passing pipeline messages.
-pub use crate::types::PipelineMessage;
+pub use crate::models::generic_pipeline::PipelineMessage;
 
 /// Pipeline signal passing.
-pub use crate::types::PipelineStatus;
+pub use crate::models::generic_pipeline::PipelineStatus;
 
 /// Data carrier for pipeline progress.
-pub use crate::types::ProgressData;
+pub use crate::models::generic_pipeline::ProgressData;
 
 /// Provides filesystem utility functions.
 pub use crate::utils::file_utils;

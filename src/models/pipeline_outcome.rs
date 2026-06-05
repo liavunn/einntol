@@ -23,19 +23,16 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use std::path::PathBuf;
+use crate::models::file_pipeline_data::{
+    FileResultPaths,
+    FileResultErrors,
+};
 
-/// Represents the resulting paths from file discovery.
-#[derive(Debug, Clone)]
-pub struct FileResultPath {
+/// Represents the final outcome of the pipeline execution.
+pub enum ResultOutcome {
     /// List of successfully discovered or validated file paths.
-    pub paths: Vec<PathBuf>,
-}
+    paths(FileResultPaths),
 
-/// Represents file discovery errors.
-pub struct FileResultError {
     /// Collection of non-fatal errors encountered during the execution.
-    pub errors: Vec<AppError>,
+    errors(FileResultErrors),
 }
-
-

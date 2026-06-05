@@ -40,5 +40,3 @@ pub struct FileResultErrors {
     /// Collection of non-fatal errors encountered during the execution.
     pub errors: Vec<AppError>,
 }
-
-

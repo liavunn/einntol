@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Global configuration modes and flag definitions.
+//! 
 
 #![deny(warnings)]
 #![deny(clippy::pedantic)]
@@ -23,19 +23,11 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-/// Returns the hex color code corresponding to the safety level for UI display.
-///
-/// # Arguments
-/// * `self` - The `SafetyLevel` variant to get the color for.
-///
-/// # Returns
-/// * Safety level color.
-#[must_use]
-pub fn get_color(&self) -> &str {
-    match self {
-        SafetyLevel::Safe {..}    => "#A2F$A2",
-        SafetyLevel::Warning {..} => "#FFEA00",
-        SafetyLevel::Danger {..}  => "#FF3366",
-    }
-}
+/// 
+pub mod generic_pipeline;
 
+/// 
+pub mod pipeline_outcome;
+
+/// 
+pub mod file_pipeline_data;

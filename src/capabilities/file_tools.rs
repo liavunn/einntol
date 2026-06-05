@@ -32,12 +32,18 @@ use std::sync::atomic::Ordering;
 use crossbeam_channel::Sender;
 use wyhash::WyHash;
 
-use crate::AppError;
-use crate::FileMode;
-use crate::FileResult;
-use crate::PipelineMessage;
-use crate::PipelineStatus;
-use crate::ProgressData;
+use crate::errors::AppError;
+use crate::modes::file_mode::FileMode;
+use crate::models::file_pipeline_data::{
+    FileResultPaths,
+    FileResultErrors,
+};
+use crate::models::file_pipeline_data::FileResultErrors;
+use crate::models::generic_pipemline::{
+    PipelineMessage,
+    PipelineStatus,
+    ProgressData,
+};
 use crate::file_utils::find_paths;
 
 type WyHashSet<T> = HashSet<T, BuildHasherDefault<WyHash>>;
