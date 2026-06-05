@@ -23,7 +23,7 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use std::path::PathBuf;
+use std::sync::Arc;
 
 bitflags::bitflags! {
     /// Represents a set of active file behavior flags.
@@ -36,7 +36,7 @@ bitflags::bitflags! {
         const WITH_HIDDEN      = 0b0000_0001;
 
         /// Include directories in the results.
-        const WITH_DIR         = 0b0000_0010;
+        const ONLY_DIR         = 0b0000_0010;
 
         /// Ignore differences in letter case.
         const CASE_INSENSITIVE = 0b0000_0100;
@@ -49,9 +49,88 @@ bitflags::bitflags! {
 
         /// Enable all of the above flags.
         const ALL              = Self::WITH_HIDDEN.bits() |
-                                 Self::WITH_DIR.bits() |
+                                 Self::ONLY_DIR.bits() |
                                  Self::CASE_INSENSITIVE.bits() |
                                  Self::UNLIMITED.bits() |
                                  Self::FUZZY.bits();
+    }
+}
+
+/// Represents a specific rule used to filter files and directories during scanning.
+pub enum FilterStrategy {
+    /// Do not apply any filtering.
+    None(Arc<str>),
+    /// Filter out all items except directories, passing only directory entries.
+    OnlyDir(Arc<str>),
+    /// Match file names without considering letter case differences.
+    CaseInsensitive(Arc<str>),
+    /// Perform a fuzzy or partial match on file names.
+    Fuzzy(Arc<str>),
+}
+
+impl FilterStrategy {
+    pub fn matches(&self, entry: &ignore::DirEntry) -> bool {
+        match self {
+            // None: Match regular files only; skip hidden files, directories, and paths ignored by .gitignore.
+            Self::None(name) => {
+                let current_name = entry.file_name().to_string_lossy();
+
+                if !entry.file_type().map_or(false, |filekind| filekind.is_file()) {
+                    return false;
+                }
+
+                if name.as_ref() != current_name {
+                    return false;
+                } 
+
+                true
+            },
+
+            // Only_dir: Match directories only; exclude regular and hidden files.
+            Self::OnlyDir(name) => {
+                let current_name = entry.file_name().to_string_lossy();
+
+                if entry.file_type().map_or(false, |filekind| filekind.is_dir()) {
+                    return false;
+                }
+
+                if name.as_ref() != current_name {
+                    return false;
+                } 
+
+                true
+            },
+
+            // Case_Insensitive: Perform case-insensitive filename comparison.
+            Self::CaseInsensitive(name) => {
+                let current_name = entry.file_name().to_string_lossy();
+
+                if name.as_ref() != current_name.to_lowercase() {
+                    return false;
+                }
+
+                if name.as_ref() != current_name {
+                    return false;
+                } 
+
+                true
+
+            },
+
+            // Fuzzy: Match files by stem name.
+            Self::Fuzzy(name) => {
+                let current_stem = entry
+                 .path()
+                .file_stem()
+                .map(|str| str.to_string_lossy())
+                .unwrap_or_default();
+
+                if name.as_ref() != current_stem {
+                    return false;
+                }
+
+                true
+            },
+        }
     }
 }

@@ -23,10 +23,10 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use crate::AppError;
+use crate::errors::AppError;
 
 /// Represents the safety assessment of a path, including its risk level and privilege requirement.
-pub enum SafetyLevel {
+pub enum FileSafetyLevel {
     /// Operations can be performed without restriction.
     Safe {
         /// Indicates if superuser privileges are required.
@@ -46,23 +46,7 @@ pub enum SafetyLevel {
     },
 }
 
-impl SafetyLevel {
-    /// Returns the hex color code corresponding to the safety level for UI display.
-    ///
-    /// # Arguments
-    /// * `self` - The `SafetyLevel` variant to get the color for.
-    ///
-    /// # Returns
-    /// * Safety level color.
-    #[must_use]
-    pub fn get_color(&self) -> &str {
-        match self {
-            SafetyLevel::Safe {..}    => "#A2F$A2",
-            SafetyLevel::Warning {..} => "#FFEA00",
-            SafetyLevel::Danger {..}  => "#FF3366",
-        }
-    }
-
+impl FileSafetyLevel {
     /// Evaluates the path's safety based on its root component.
     ///
     /// # Arguments
@@ -87,13 +71,13 @@ impl SafetyLevel {
 
         let level = match first_component {
             Some("boot" | "dev" |"proc" | "sys" | "run" | "lib" | "lib64") => 
-                SafetyLevel::Danger {needs_su: true},
+                FileSafetyLevel::Danger {needs_su: true},
 
             Some("root" | "bin" | "sbin" | "etc" | "usr" | "var") =>
-                SafetyLevel::Warning {needs_su: true},
-            Some("home") => SafetyLevel::Warning {needs_su: false},
+                FileSafetyLevel::Warning {needs_su: true},
+            Some("home") => FileSafetyLevel::Warning {needs_su: false},
 
-            _ => SafetyLevel::Safe {needs_su: false},
+            _ => FileSafetyLevel::Safe {needs_su: false},
         };
 
         Ok(level)

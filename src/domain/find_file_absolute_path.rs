@@ -38,8 +38,8 @@ use einntol::file_tools;
 use einntol::PipelineMessage;
 use einntol::PipelineStatus;
 
-/// Main
-fn find_file_path() {
+/// 
+pub fn find_file_path() {
     scope (|s| {
         s.spawn (|| {
             let counter = Arc::new(AtomicBool::new(0));

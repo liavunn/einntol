@@ -29,10 +29,11 @@ use crate::models::file_pipeline_data::{
 };
 
 /// Represents the final outcome of the pipeline execution.
+#[derive(Debug)]
 pub enum ResultOutcome {
     /// List of successfully discovered or validated file paths.
-    paths(FileResultPaths),
+    Datas(FileResultPaths),
 
     /// Collection of non-fatal errors encountered during the execution.
-    errors(FileResultErrors),
+    Errors(FileResultErrors),
 }

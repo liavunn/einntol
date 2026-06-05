@@ -33,13 +33,12 @@ use crossbeam_channel::Sender;
 use wyhash::WyHash;
 
 use crate::errors::AppError;
-use crate::modes::file_mode::FileMode;
+use crate::modes::file_modes::FileMode;
+use crate::models::pipeline_outcome::ResultOutcome;
 use crate::models::file_pipeline_data::{
-    FileResultPaths,
     FileResultErrors,
 };
-use crate::models::file_pipeline_data::FileResultErrors;
-use crate::models::generic_pipemline::{
+use crate::models::generic_pipeline::{
     PipelineMessage,
     PipelineStatus,
     ProgressData,
@@ -112,10 +111,11 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
             let err = path_status.unwrap_err();
             let app_err = AppError::from_io_file_error(Some(err), input_path.to_owned(), None);
             tx.send(PipelineMessage::Data(
-                FileResult {
-                    paths: None,
-                    errors: Some(vec![app_err.into()]),
-                }
+                ResultOutcome::Errors(
+                    FileResultErrors {
+                        errors: vec![app_err.into()],
+                    }
+                )
             )).unwrap();
 
             continue;

@@ -23,20 +23,22 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use crate::pipeline_outcome::ResultOutcome;
+use crate::models::pipeline_outcome::ResultOutcome;
 
 /// Represents a message sent through the pipeline, carrying either data or a control signal.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum PipelineMessage {
     /// `self::File`(Contains the processed file results and any associated non-fatal errors.
     Data(ResultOutcome),
+
+    FatalError(std::io::Error),
 
     /// Carries pipeline lifecycle and progress status signals
     Signal(PipelineStatus),
 }
 
 /// Defines the operational states of the pipeline lifecycle.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum PipelineStatus {
     /// Initializing the process.
     Starting,
@@ -52,7 +54,7 @@ pub enum PipelineStatus {
 }
 
 /// Data carrier for pipeline progress
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum ProgressData {
     /// Number of processed items.
     Size(usize),

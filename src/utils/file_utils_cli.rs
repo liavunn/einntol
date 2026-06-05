@@ -28,7 +28,7 @@ use std::path::PathBuf;
 
 use crate::AppError;
 use crate::FileMode;
-use crate::FileResult;
+use crate::models::file_pipeline_data::FileResults;
 
 /// Get some unchecked paths from the user.
 ///
@@ -38,7 +38,7 @@ use crate::FileResult;
 /// # Returns
 /// * Returns retrieved unchecked paths.
 #[must_use]
-pub fn get_unchecked_paths_cli() -> FileResult {
+pub fn get_unchecked_paths_cli() -> FileResults {
     const MAX_PATH_NUM: usize = 2000;
 
     println!("Please enter path(leave blank for current directory)");
@@ -76,7 +76,10 @@ pub fn get_unchecked_paths_cli() -> FileResult {
         unchecked_pathbufs.push(PathBuf::from(str));
     }
 
-    FileResult {paths: Some(unchecked_pathbufs), errors: Some(paths_errors)}
+    FileResults {
+        paths: unchecked_pathbufs,
+        errors: paths_errors
+    }
 }
 
 /// Get a mode from the user.
@@ -114,7 +117,7 @@ pub fn get_file_mode() -> (FileMode, Option<Vec<AppError>>) {
             },
 
             Some(b'D') => {
-               break FileMode::WITH_DIR;
+               break FileMode::ONLY_DIR;
             },
 
             Some(b'C') => {

@@ -23,8 +23,8 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use crate::GenericError;
-use crate::AppError;
+use crate::errors::generic_errors::GenericError;
+use crate::errors::AppError;
 
 impl AppError {
     /// Converts a standard `std::io::Error` into an enriched `AppError`.

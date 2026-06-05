@@ -30,9 +30,16 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use ignore::{ParallelVisitor, ParallelVisitorBuilder, WalkBuilder, WalkState, DirEntry};
 use crossbeam_channel::Sender;
 
-use crate::AppError;
-use crate::FileMode;
-use crate::FileResult;
+use crate::errors::AppError;
+use crate::modes::file_modes::{
+    FileMode,
+    FilterStrategy,
+};
+use crate::models::pipeline_outcome::ResultOutcome;
+use crate::models::file_pipeline_data::{
+    FileResultPaths,
+    FileResultErrors
+};
 use crate::PipelineMessage;
 use crate::PipelineStatus;
 
@@ -79,37 +86,48 @@ impl ParallelVisitor for FileVisitor {
             );
 
             self.tx.send(PipelineMessage::Data(
-                FileResult {
-                    paths: None,
-                    errors: Some(vec![app_err.into()]),
-                })).unwrap();
+                ResultOutcome::Errors(
+                    FileResultErrors {
+                        errors: vec![app_err.into()],
+                    })
+                )).unwrap();
 
             return WalkState::Continue;
         };
-            
-        match filter_ignore_match(&entry, &self.name, self.mode) {
-            Ok(is_match) => {
-                if is_match {
-                    self.tx.send(PipelineMessage::Data(
-                    FileResult {
-                        paths: Some(vec![entry.path().to_path_buf()]),
-                        errors: None,
-                    })).unwrap();
-                }
 
-                WalkState::Continue
-            }
+        let mut mode_strategy = Vec::new();
 
-            Err(app_err) => {
-                self.tx.send(PipelineMessage::Data(
-                FileResult {
-                    paths: None,
-                    errors: Some(vec![app_err]),
-                })).unwrap();
-            
-                WalkState::Continue
-            }
+        for mode_item in self.mode.iter() { 
+            mode_strategy.push(match mode_item {
+                FileMode::NONE => FilterStrategy::None(self.name.clone()),
+
+                FileMode::ONLY_DIR => FilterStrategy::OnlyDir(self.name.clone()),
+
+                FileMode::CASE_INSENSITIVE => FilterStrategy::CaseInsensitive(self.name.clone()),
+
+                FileMode::FUZZY => FilterStrategy::Fuzzy(self.name.clone()),
+
+                _ => continue,
+            });
         }
+
+        for strategy in mode_strategy {
+            let strategy_bool = FilterStrategy::matches(&strategy, &entry);
+
+            if !strategy_bool {
+                return WalkState::Continue;
+            } 
+        }
+
+            self.tx.send(PipelineMessage::Data(
+                ResultOutcome::Datas(
+                    FileResultPaths {
+                        paths: vec![entry.path().to_path_buf()],
+                    }
+                )
+            )).unwrap();
+
+        WalkState::Continue
     }
 }
 
@@ -177,54 +195,3 @@ pub fn find_paths(
     tx.send(PipelineMessage::Signal(PipelineStatus::Finished)).unwrap();
 }
 
-/// Validates file entries based on user-defined filtering modes.
-/// While reporting error states to the pipeline in the event of missing metadata.
-///
-/// # Arguments
-/// * `entry` - The file entry object provided by the ignore crate.
-/// * `name`  - Target filename to search.
-/// * `mode`  - Configuration flags for the search mode.
-/// * `tx`    - transmit results and status updates to the caller.
-///
-/// # Returns
-/// * Returns `true` If the entry matches the filtering criteria.
-/// * Returns `false`  If the entry not matches the filtering criteria or if a non-fatal error occurred during processing.
-fn filter_ignore_match(entry: &DirEntry, name: &str, mode: FileMode) -> Result<bool, AppError> {
-    let entry_type = entry.file_type();
-
-    let Some(entry_type) = entry_type else { 
-            let app_err = AppError::from_io_file_error(None, entry.path().to_path_buf(), None);
-            return Err(app_err.into());
-    };
-
-    // NONE: Match regular files only; skip hidden files, directories, and paths ignored by .gitignore.
-    if mode.contains(FileMode::NONE) && !entry_type.is_file() {
-        return Ok(false);
-    }
-
-    // WITH_DIR: Match directories only; exclude regular and hidden files.
-    if mode.contains(FileMode::WITH_DIR) && !entry_type.is_dir() {
-        return Ok(false);
-    }
-
-    // FUZZY: Match files by stem name.
-    if mode.contains(FileMode::FUZZY) {
-        let current_stem = entry
-            .path()
-            .file_stem()
-            .map(|str| str.to_string_lossy())
-            .unwrap_or_default();
-
-        if name != current_stem {
-            return Ok(false);
-        }
-    }
-
-    // CASE_INSENSITIVE: Perform case-insensitive filename comparison.
-    let current_name = entry.file_name().to_string_lossy();
-    if mode.contains(FileMode::CASE_INSENSITIVE) && name.to_lowercase() != current_name.to_lowercase() && name != current_name{
-        return Ok(false);
-    }
-
-    Ok(true)
-}

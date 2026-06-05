@@ -25,17 +25,27 @@
 
 use std::path::PathBuf;
 
-use crate::AppError;
+use crate::errors::AppError;
+
+/// Represents the comprehensive results gathered during the file walking process.
+#[derive(Debug)]
+pub struct FileResults {
+    /// List of successfully discovered or validated file paths.
+    pub paths: Vec<PathBuf>,
+
+    /// Collection of non-fatal errors encountered during the execution.
+    pub errors: Vec<AppError>,
+}
 
 /// Represents the resulting paths from file discovery.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct FileResultPaths {
     /// List of successfully discovered or validated file paths.
     pub paths: Vec<PathBuf>,
 }
 
 /// Represents errors encountered during file discovery.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct FileResultErrors {
     /// Collection of non-fatal errors encountered during the execution.
     pub errors: Vec<AppError>,

@@ -23,19 +23,31 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
+use crate::security::file_safe::FileSafetyLevel;
+
 /// Returns the hex color code corresponding to the safety level for UI display.
 ///
 /// # Arguments
-/// * `self` - The `SafetyLevel` variant to get the color for.
+/// * `self` - The object variant to get the color for.
 ///
 /// # Returns
 /// * Safety level color.
-#[must_use]
-pub fn get_color(&self) -> &str {
-    match self {
-        SafetyLevel::Safe {..}    => "#A2F$A2",
-        SafetyLevel::Warning {..} => "#FFEA00",
-        SafetyLevel::Danger {..}  => "#FF3366",
+pub trait ColorDisplay {
+    fn get_color(&self) -> &'static str;
+}
+
+macro_rules! impl_get_color_display {
+    ($type_name:ty) => {
+        impl ColorDisplay for $type_name {
+            fn get_color(&self) -> &'static str {
+                match self {
+                    Self::Safe {..}    => "#A2F$A2",
+                    Self::Warning {..} => "#FFEA00",
+                    Self::Danger {..}  => "#FF3366",
+                }
+            }
+        }
     }
 }
 
+impl_get_color_display!(FileSafetyLevel);

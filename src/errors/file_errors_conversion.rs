@@ -28,8 +28,8 @@ use std::path::PathBuf;
 use std::sync::LazyLock;
 use sysinfo::Disks;
 
-use crate::{FileOperationError, FileError};
-use crate::AppError;
+use crate::errors::file_errors::{FileOperationError, FileError};
+use crate::errors::AppError;
 
 /// Global read-only disk information manager for error diagnostics.
 static DISK_MANAGER: LazyLock<Disks> = LazyLock::new(|| {
