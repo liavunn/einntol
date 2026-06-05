@@ -27,16 +27,17 @@ use std::thread::scope;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 
-use miette;
 use crossbeam_channel::{bounded, Sender, Receiver};
 
-use einntol::utils::{
+use crate::utils::{
     file_utils_cli,
     generic_utils_cli
 };
-use einntol::file_tools;
-use einntol::PipelineMessage;
-use einntol::PipelineStatus;
+use crate::capabilities::file_tools;
+use crate::models::generic_pipeline::{
+    PipelineMessage,
+    PipelineStatus,
+};
 
 /// 
 pub fn find_file_path() {
