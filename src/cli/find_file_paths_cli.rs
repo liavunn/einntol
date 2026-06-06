@@ -43,7 +43,8 @@ use crate::models::generic_pipeline::{
 pub fn find_file_path() {
     scope (|s| {
         s.spawn (|| {
-            let counter = Arc::new(AtomicBool::new(0));
+            let (tx, rx): (Sender<PipelineMessage>, Receiver<PipelineMessage>) = bounded::<PipelineMessage>(2000); 
+            let counter = Arc::new(AtomicBool::new(false));
             let unchecked_paths = file_utils_cli::get_unchecked_paths_cli();
             let (file_mode, app_err) = file_utils_cli::get_file_mode();
             let name = generic_utils_cli::get_name();
@@ -52,17 +53,19 @@ pub fn find_file_path() {
                 generic_utils_cli::monitor_commands(&counter, &tx);
             }); 
 
-            match unchecked_paths.errors {
-                Some(errors) if !errors.is_empty() => 
-                    for unchecked_path in errors.iter() {
-                        println!("Bad path: {}", unchecked_path);
-                    },
+            match &unchecked_paths.errors {
+                errors => 
+                    if !errors.is_empty() {
+                        for unchecked_path in errors.iter() {
+                            println!("Bad path: {}", unchecked_path);
+                        },
+                    }
 
                 _ => println!("All paths are valid."),
             }
 
             match unchecked_paths.paths {
-                Some(paths) => file_tools::scan_and_find(paths, name, file_mode, counter, tx),
+                paths => file_tools::scan_and_find(paths, name, file_mode, counter, tx),
 
                 _ => println!("No valid paths available."),
             }
@@ -89,7 +92,6 @@ pub fn find_file_path() {
                             println!("Starting search..."),
 
                         PipelineStatus::Progress(count) => 
-
                             println!("Items found: [{}]", count),
 
                         PipelineStatus::Aborted =>

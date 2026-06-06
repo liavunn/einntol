@@ -23,8 +23,6 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use crate::security::file_safe::FileSafetyLevel;
-
 /// Returns the hex color code corresponding to the safety level for UI display.
 ///
 /// # Arguments
@@ -36,6 +34,7 @@ pub trait ColorDisplay {
     fn get_color(&self) -> &'static str;
 }
 
+#[macro_export]
 macro_rules! impl_get_color_display {
     ($type_name:ty) => {
         impl ColorDisplay for $type_name {
@@ -50,4 +49,4 @@ macro_rules! impl_get_color_display {
     }
 }
 
-impl_get_color_display!(FileSafetyLevel);
+

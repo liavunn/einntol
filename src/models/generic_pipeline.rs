@@ -24,6 +24,7 @@
 #![forbid(unsafe_code)]
 
 use crate::models::pipeline_outcome::ResultOutcome;
+use crate::impl_debug_to_display;
 
 /// Represents a message sent through the pipeline, carrying either data or a control signal.
 #[derive(Debug)]
@@ -63,4 +64,11 @@ pub enum ProgressData {
     TotalSize(usize),
 }
 
-
+impl std::fmt::Display for ProgressData {
+    fn fmt(&self, forma: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProgressData::Size(num) => write!(forma, "{}", num),
+            ProgressData::TotalSize(num) => write!(forma, "{}", num),
+        }
+    }
+}

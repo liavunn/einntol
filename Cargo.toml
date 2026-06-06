@@ -21,6 +21,7 @@ ignore = "0.4"
 bitflags = "2"
 crossbeam-channel = "0.5"
 serde = { version = "1.0", features = ["derive"] }
+iced = "0.14"
 
 [features]
 default = ["logging"]

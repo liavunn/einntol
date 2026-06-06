@@ -24,6 +24,10 @@
 #![forbid(unsafe_code)]
 
 use crate::errors::AppError;
+use crate::security::generic_safe::ColorDisplay;
+use crate::impl_get_color_display;
+
+
 
 /// Represents the safety assessment of a path, including its risk level and privilege requirement.
 pub enum FileSafetyLevel {
@@ -83,3 +87,5 @@ impl FileSafetyLevel {
         Ok(level)
     }
 }
+
+impl_get_color_display!(FileSafetyLevel);

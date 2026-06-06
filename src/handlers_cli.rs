@@ -23,14 +23,5 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-/// 
-pub mod pipeline_derive;
-
-/// 
-pub mod generic_pipeline;
-
-/// 
-pub mod pipeline_outcome;
-
-/// 
-pub mod file_pipeline_data;
+ 
+pub mod handle_find_file_paths_cli;

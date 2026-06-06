@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! 
+//! The entry point of the Einntol GUI program, responsible for environment initialization.
 
 #![deny(warnings)]
 #![deny(clippy::pedantic)]
@@ -23,14 +23,17 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-/// 
-pub mod pipeline_derive;
+use std::thread::scope;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
-/// 
-pub mod generic_pipeline;
+use iced;
 
-/// 
-pub mod pipeline_outcome;
+use crossbeam_channel::{bounded, Sender, Receiver};
+use einntol::file_tools;
+use einntol::PipelineMessage;
+use einntol::PipelineStatus;
 
-/// 
-pub mod file_pipeline_data;
+/// Main
+fn run_gui() -> {
+}

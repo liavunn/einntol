@@ -27,49 +27,45 @@ use std::thread::scope;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 
-use miette;
 use crossbeam_channel::{bounded, Sender, Receiver};
 
-use einntol::utils::{
+use crate::utils::{
     file_utils_cli,
     generic_utils_cli
 };
-use einntol::file_tools;
-use einntol::PipelineMessage;
-use einntol::PipelineStatus;
+use crate::capabilities::file_tools;
+use crate::models::generic_pipeline::{
+    PipelineMessage,
+    PipelineStatus,
+};
 
-/// Main
-fn main() -> miette::Result<()> {
-    let (tx, rx): (Sender<PipelineMessage>, Receiver<PipelineMessage>) = bounded::<PipelineMessage>(2000);
-
-    println!("Hi, einntol initialized.");
-
-    println!("Entre \'bye\' to quit.");
-
+/// 
+pub fn find_file_paths_cli() {
     scope (|s| {
         s.spawn (|| {
-            let counter = Arc::new(AtomicBool::new(0));
+            let (tx, rx): (Sender<PipelineMessage>, Receiver<PipelineMessage>) = bounded::<PipelineMessage>(2000); 
+            let counter = Arc::new(AtomicBool::new(false));
             let unchecked_paths = file_utils_cli::get_unchecked_paths_cli();
             let (file_mode, app_err) = file_utils_cli::get_file_mode();
             let name = generic_utils_cli::get_name();
 
             s.spawn (|| {
                 generic_utils_cli::monitor_commands(&counter, &tx);
-            });
+            }); 
 
-            
-
-            match unchecked_paths.errors {
-                Some(errors) if !errors.is_empty() => 
-                    for unchecked_path in errors.iter() {
-                        println!("Bad path: {}", unchecked_path);
-                    },
+            match &unchecked_paths.errors {
+                errors => 
+                    if !errors.is_empty() {
+                        for unchecked_path in errors.iter() {
+                            println!("Bad path: {}", unchecked_path);
+                        },
+                    }
 
                 _ => println!("All paths are valid."),
             }
 
             match unchecked_paths.paths {
-                Some(paths) => file_tools::scan_and_find(paths, name, file_mode, counter, tx),
+                paths => file_tools::scan_and_find(paths, name, file_mode, counter, tx),
 
                 _ => println!("No valid paths available."),
             }
@@ -96,7 +92,6 @@ fn main() -> miette::Result<()> {
                             println!("Starting search..."),
 
                         PipelineStatus::Progress(count) => 
-
                             println!("Items found: [{}]", count),
 
                         PipelineStatus::Aborted =>
@@ -109,6 +104,4 @@ fn main() -> miette::Result<()> {
             }
         }
     });
-
-    Ok(())
 }

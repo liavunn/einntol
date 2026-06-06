@@ -25,18 +25,27 @@
 
 /// Error handling utilities and custom error types.
 pub mod errors;
+
 /// Core business logic and system-level functional capabilities.
 pub mod capabilities;
+
 /// Utilities
 pub mod utils;
-/// 
-pub mod domain;
+
 /// 
 pub mod security;
+
 /// 
 pub mod models;
+
 /// 
 pub mod modes;
+
+///
+pub mod monitor;
+
+/// 
+pub mod handlers_cli;
 
 /// File processing capabilities.
 pub use crate::capabilities::file_tools;
@@ -51,7 +60,7 @@ pub use crate::errors::file_errors::{FileError, FileOperationError};
 pub use crate::errors::generic_errors::GenericError;
 
 /// Safety levels used for validating file paths and permissions.
-pub use crate::security::file_safe::SafetyLevel;
+pub use crate::security::file_safe::FileSafetyLevel;
 
 /// File tool mode.
 pub use crate::modes::file_modes::FileMode;

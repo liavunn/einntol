@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! 
+//! Global configuration modes and flag definitions.
 
 #![deny(warnings)]
 #![deny(clippy::pedantic)]
@@ -24,13 +24,17 @@
 #![forbid(unsafe_code)]
 
 /// 
-pub mod pipeline_derive;
-
-/// 
-pub mod generic_pipeline;
-
-/// 
-pub mod pipeline_outcome;
-
-/// 
-pub mod file_pipeline_data;
+#[macro_export]
+macro_rules! impl_struct_debug_to_display {
+    ($(($type_name:ty, $($field:ident),+)),* $(,)?) => {
+        $(
+            impl std::fmt::Display for $type_name {
+                fn fmt(&self, forma: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    write!(forma, "{}", [
+                        $(format!("{:?}", self.$field)),+
+                    ].join(", "))
+                }
+            }
+        )*
+    };
+}

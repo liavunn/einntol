@@ -26,6 +26,7 @@
 use std::path::PathBuf;
 
 use crate::errors::AppError;
+use crate::impl_struct_debug_to_display;
 
 /// Represents the comprehensive results gathered during the file walking process.
 #[derive(Debug)]
@@ -50,3 +51,9 @@ pub struct FileResultErrors {
     /// Collection of non-fatal errors encountered during the execution.
     pub errors: Vec<AppError>,
 }
+
+impl_struct_debug_to_display!(
+    (FileResults, paths, errors),
+    (FileResultPaths, paths),
+    (FileResultErrors, errors),
+    );
