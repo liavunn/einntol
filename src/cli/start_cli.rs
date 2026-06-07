@@ -12,28 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Global configuration modes and flag definitions.
+//! The entry point of the Einntol GUI program, responsible for environment initialization.
 
-#![forbid(warnings)]
-#![forbid(clippy::pedantic)]
-#![forbid(clippy::all)]
+#![deny(warnings)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::all)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use crate::models::file_pipeline_data::{
-    FileResultPaths,
-    FileResultErrors,
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
+
+use crossbeam_channel::Sender;
+
+use crate::monitor::generic_monitor_cli::signal_monitor_cli::monitor_commands;
+
+use crate::models::generic_pipeline::{
+    PipelineMessage,
 };
 
-/// Represents the final outcome of the pipeline execution.
-#[derive(Debug)]
-pub enum ResultOutcome {
-    /// List of successfully discovered or validated file paths.
-    Datas(FileResultPaths),
+/// 
+pub fn start_cli(stop_signal: &Arc<AtomicBool>, tx: &Sender<PipelineMessage>) {
+    println!("Hi, einntol initialized.");
 
-    /// Collection of non-fatal errors encountered during the execution.
-    Errors(FileResultErrors),
+    println!("Entre \'bye\' to quit.");
+
+    monitor_commands(stop_signal, tx);
 }

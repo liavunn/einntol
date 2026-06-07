@@ -14,9 +14,9 @@
 
 //! Global configuration modes and flag definitions.
 
-#![deny(warnings)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::all)]
+#![forbid(warnings)]
+#![forbid(clippy::pedantic)]
+#![forbid(clippy::all)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
@@ -31,9 +31,11 @@
 /// # Returns
 /// * Safety level color.
 pub trait ColorDisplay {
+    /// 
     fn get_color(&self) -> &'static str;
 }
 
+/// 
 #[macro_export]
 macro_rules! impl_get_color_display {
     ($type_name:ty) => {

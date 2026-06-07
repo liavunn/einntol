@@ -14,14 +14,16 @@
 
 //! 
 
-#![deny(warnings)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::all)]
+#![forbid(warnings)]
+#![forbid(clippy::pedantic)]
+#![forbid(clippy::all)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
- 
-//pub mod ;
+pub mod generic_monitor_cli{
+    pub mod signal_monitor_cli;
+}
+

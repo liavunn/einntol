@@ -39,9 +39,6 @@ static DISK_MANAGER: LazyLock<Disks> = LazyLock::new(|| {
 impl AppError {
     /// Converts a standard `std::io::Error` into an enriched `AppError`.
     pub fn from_io_file_error(err: Option<std::io::Error>, err_path: PathBuf, err_reason: Option<String>) -> FileOperationError {
-        #[cfg(feature = "logging")]
-        let path_for_log = err_path.clone();
-
         let err_reason = match err_reason {
             Some(rea) => rea,
 
@@ -119,16 +116,6 @@ impl AppError {
             // Fallback: capture generic system error with path context.
             _ => FileError::IOError(err_reason),
         };
-
-        #[cfg(feature = "logging")]
-        {
-            tracing::error!(
-                path = %path_for_log.display(),
-                "Summary: {}\nDetail: {:#?}",
-                    error_type,
-                    err
-            );
-        }
 
     FileOperationError {error_type: Some(error_type), path: Some(err_path)}
     }

@@ -35,5 +35,5 @@ use einntol::PipelineMessage;
 use einntol::PipelineStatus;
 
 /// Main
-fn run_gui() -> {
+fn run_gui() {
 }

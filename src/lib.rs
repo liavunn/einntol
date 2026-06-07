@@ -47,6 +47,12 @@ pub mod monitor;
 /// 
 pub mod handlers_cli;
 
+/// 
+pub mod cli;
+
+/// 
+pub mod gui;
+
 /// File processing capabilities.
 pub use crate::capabilities::file_tools;
 

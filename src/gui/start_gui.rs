@@ -12,28 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Global configuration modes and flag definitions.
+//! The entry point of the Einntol GUI program, responsible for environment initialization.
 
-#![forbid(warnings)]
-#![forbid(clippy::pedantic)]
-#![forbid(clippy::all)]
+#![deny(warnings)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::all)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
-use crate::models::file_pipeline_data::{
-    FileResultPaths,
-    FileResultErrors,
-};
-
-/// Represents the final outcome of the pipeline execution.
-#[derive(Debug)]
-pub enum ResultOutcome {
-    /// List of successfully discovered or validated file paths.
-    Datas(FileResultPaths),
-
-    /// Collection of non-fatal errors encountered during the execution.
-    Errors(FileResultErrors),
+/// 
+pub fn find_file_paths_cli() {
+    todo!();
 }

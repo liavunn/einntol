@@ -56,15 +56,6 @@ impl AppError {
             _ => GenericError::IOError(err_reason),
         };
 
-        #[cfg(feature = "logging")]
-        {
-            tracing::error!(
-                "Summary: {}\nDetail: {:#?}",
-                    error_type,
-                    err
-            );
-        }
-
         error_type
     }
 }

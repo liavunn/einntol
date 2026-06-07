@@ -41,5 +41,4 @@ use einntol::PipelineStatus;
 /// Main
 fn run_cli() -> miette::Result<()> {
     todo;
-    OK(())
 }

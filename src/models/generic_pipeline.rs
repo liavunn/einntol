@@ -14,9 +14,9 @@
 
 //! Global configuration modes and flag definitions.
 
-#![deny(warnings)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::all)]
+#![forbid(warnings)]
+#![forbid(clippy::pedantic)]
+#![forbid(clippy::all)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
@@ -24,7 +24,6 @@
 #![forbid(unsafe_code)]
 
 use crate::models::pipeline_outcome::ResultOutcome;
-use crate::impl_debug_to_display;
 
 /// Represents a message sent through the pipeline, carrying either data or a control signal.
 #[derive(Debug)]
@@ -32,6 +31,7 @@ pub enum PipelineMessage {
     /// `self::File`(Contains the processed file results and any associated non-fatal errors.
     Data(ResultOutcome),
 
+    /// 
     FatalError(std::io::Error),
 
     /// Carries pipeline lifecycle and progress status signals

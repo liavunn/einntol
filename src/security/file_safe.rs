@@ -14,9 +14,9 @@
 
 //! Global configuration modes and flag definitions.
 
-#![deny(warnings)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::all)]
+#![forbid(warnings)]
+#![forbid(clippy::pedantic)]
+#![forbid(clippy::all)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
@@ -26,8 +26,6 @@
 use crate::errors::AppError;
 use crate::security::generic_safe::ColorDisplay;
 use crate::impl_get_color_display;
-
-
 
 /// Represents the safety assessment of a path, including its risk level and privilege requirement.
 pub enum FileSafetyLevel {
