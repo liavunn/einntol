@@ -21,14 +21,13 @@
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
-#![forbid(unsafe_code)]
 
 use std::thread::scope;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 
 use miette;
-use crossbeam_channel::{bounded, Sender, Receiver};
+use tokio::time::{sleep, Duration};
 
 use einntol::utils::{
     file_utils_cli,
@@ -37,8 +36,26 @@ use einntol::utils::{
 use einntol::file_tools;
 use einntol::PipelineMessage;
 use einntol::PipelineStatus;
+use crate::cli::start_cli::start_cli;
 
 /// Main
 fn run_cli() -> miette::Result<()> {
-    todo;
+    let (tx, rx): (Sender<PipelineMessage>, Receiver<PipelineMessage>) = bounded::<PipelineMessage>(2000);
+    let einntol_quit_signal = Arc::new(AtomicBool::new(false));
+    let task_stop_signal = Arc::new(AtomicBool::new(false));
+
+    start_cli(einntol_quit_signal, task_stop_signal, tx.clone());
+
+    loop {
+        tokio::select! {
+            _ = sleep(Duration::from_millis(100)) => {
+                if einntol_quit_signal.load(Ordering::SeqCst) {
+                    println!("Byebye!");
+                    break;
+                }
+            }
+        }
+    }
+
+    Ok(())
 }

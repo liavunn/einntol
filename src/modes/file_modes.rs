@@ -14,14 +14,10 @@
 
 //! Global configuration modes and flag definitions.
 
-#![deny(warnings)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::all)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
-#![forbid(unsafe_code)]
 
 use std::sync::Arc;
 

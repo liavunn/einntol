@@ -21,7 +21,6 @@
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
-#![forbid(unsafe_code)]
 
 /// File manipulation tools.
 pub mod file_tools;

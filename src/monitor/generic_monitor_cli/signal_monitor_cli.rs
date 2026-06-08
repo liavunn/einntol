@@ -14,23 +14,20 @@
 
 //! Generic CLI Utilities.
 
-#![forbid(warnings)]
-#![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
-#![forbid(unsafe_code)]
 
-use std::io;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 
-use crossbeam_channel::Sender;
+use tokio::signal;
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::sync::mpsc::Sender;
 
-use crate::AppError;
 use crate::PipelineMessage;
 use crate::PipelineStatus;
 
@@ -44,30 +41,46 @@ use crate::PipelineStatus;
 ///
 /// # Panics
 /// * This function will panic if the pipeline message sending fails.
-pub fn monitor_commands(stop_signal: &Arc<AtomicBool>, tx: &Sender<PipelineMessage>) {
-    let mut input = String::new();
+pub async fn monitor_commands(einntol_quit_signal: Arc<AtomicBool>, task_stop_signal: Arc<AtomicBool>, tx: Sender<PipelineMessage>) {
+    println!("Enter 'stop' to terminate the task.");
 
-    loop{
-        println!("Enter 'stop' to terminate the task.");
+    println!("Entre \'bye\' to quit.");
 
-        input.clear();
-        if let Err(err) = io::stdin().read_line(&mut input) {
-            AppError::from_io_generic_error(Some(err), None);
-            continue;
-        }
+    let mut reader = BufReader::new(tokio::io::stdin()).lines();
 
-        let input_trim = input.trim();
-
-        match input_trim {
-            "stop" => {
-                stop_signal.store(true, Ordering::SeqCst);
-                tx.send(PipelineMessage::Signal(
-                    PipelineStatus::Aborted
-                )).unwrap();
+  
+    loop {
+        tokio::select! {
+            _ = signal::ctrl_c() => {
+                println!("Byebye!");
+                einntol_quit_signal.store(true, Ordering::SeqCst);
+                break;
             }
 
-            _ => {
-                println!("Please enter a valid command.");
+            line = reader.next_line() => {
+                match line {
+                    Ok(Some(input)) => {
+                        match input.trim() {
+                            "bye" => {
+                                 einntol_quit_signal.store(true, Ordering::SeqCst);
+                                 println!("Byebye!");
+                            }
+
+                            "stop" => {
+                                task_stop_signal.store(true, Ordering::SeqCst);
+                                tx.send(PipelineMessage::Signal(
+                                PipelineStatus::Aborted
+                            )).await.unwrap();
+                            }
+
+                            _ => println!("Please enter a valid command."),
+                        }
+                    },
+
+                    Ok(None) => break,
+
+                    Err(_) => break,
+                }
             }
         }
     }

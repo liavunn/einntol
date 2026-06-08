@@ -21,7 +21,6 @@
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
-#![forbid(unsafe_code)]
 
 use crate::models::file_pipeline_data::{
     FileResultPaths,

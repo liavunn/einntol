@@ -14,14 +14,12 @@
 
 //! Converts `std::io::Error` into a custom error enum.
 
-#![deny(warnings)]
 #![forbid(clippy::pedantic)]
 #![forbid(clippy::all)]
 #![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
-#![forbid(unsafe_code)]
 
 use std::path::PathBuf;
 

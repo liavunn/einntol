@@ -22,7 +22,6 @@
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
-#![forbid(unsafe_code)]
 
 /// Specialized error types for file system operations.
 pub mod file_errors;

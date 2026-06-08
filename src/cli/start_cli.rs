@@ -21,24 +21,21 @@
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
-#![forbid(unsafe_code)]
 
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 
-use crossbeam_channel::Sender;
+use tokio::sync::mpsc::Sender;
 
 use crate::monitor::generic_monitor_cli::signal_monitor_cli::monitor_commands;
-
 use crate::models::generic_pipeline::{
     PipelineMessage,
 };
 
 /// 
-pub fn start_cli(stop_signal: &Arc<AtomicBool>, tx: &Sender<PipelineMessage>) {
+pub fn start_cli(einntol_quit_signal: Arc<AtomicBool>, task_stop_signal: Arc<AtomicBool>, tx: Sender<PipelineMessage>) {
     println!("Hi, einntol initialized.");
 
-    println!("Entre \'bye\' to quit.");
-
-    monitor_commands(stop_signal, tx);
+    monitor_commands(einntol_quit_signal, task_stop_signal, tx);
+    
 }

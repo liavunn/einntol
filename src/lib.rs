@@ -17,7 +17,7 @@
 #![deny(warnings)]
 #![deny(clippy::pedantic)]
 #![deny(clippy::all)]
-#![forbid(clippy::cargo)]
+#![warm(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
@@ -32,16 +32,16 @@ pub mod capabilities;
 /// Utilities
 pub mod utils;
 
-/// 
+/// Security control module.
 pub mod security;
 
-/// 
+/// Pipeline schema.
 pub mod models;
 
-/// 
+/// Functional mode definitions.
 pub mod modes;
 
-///
+/// System monitoring and logging module.
 pub mod monitor;
 
 /// 

@@ -28,7 +28,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use ignore::{ParallelVisitor, ParallelVisitorBuilder, WalkBuilder, WalkState, DirEntry};
-use crossbeam_channel::Sender;
+use tokio::sync::mpsc::Sender;
 
 use crate::errors::AppError;
 use crate::modes::file_modes::{

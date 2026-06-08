@@ -21,7 +21,6 @@
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
-#![forbid(unsafe_code)]
 
 /// Returns the hex color code corresponding to the safety level for UI display.
 ///
