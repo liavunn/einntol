@@ -17,7 +17,7 @@
 #![deny(warnings)]
 #![deny(clippy::pedantic)]
 #![deny(clippy::all)]
-#![warm(clippy::cargo)]
+#![warn(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
@@ -52,6 +52,9 @@ pub mod cli;
 
 /// 
 pub mod gui;
+
+///
+pub mod macros;
 
 /// File processing capabilities.
 pub use crate::capabilities::file_tools;

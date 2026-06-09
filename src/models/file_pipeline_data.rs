@@ -55,4 +55,4 @@ impl_struct_debug_to_display!(
     (FileResults, paths, errors),
     (FileResultPaths, paths),
     (FileResultErrors, errors),
-    );
+);

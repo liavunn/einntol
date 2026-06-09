@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Global configuration modes and flag definitions.
+//! 
 
 #![forbid(warnings)]
 #![forbid(clippy::pedantic)]
@@ -22,17 +22,5 @@
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
-use crate::models::file_pipeline_data::{
-    FileResultPaths,
-    FileResultErrors,
-};
-
-/// Represents the final outcome of the pipeline execution.
-#[derive(Debug)]
-pub enum ResultOutcome {
-    /// List of successfully discovered or validated file paths.
-    FilePaths(FileResultPaths),
-
-    /// Collection of non-fatal errors encountered during the execution.
-    FileErrors(FileResultErrors),
-}
+/// 
+pub mod generic_derive;

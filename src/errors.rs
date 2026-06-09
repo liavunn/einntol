@@ -35,8 +35,6 @@ pub mod generic_errors;
 /// 
 pub mod generic_errors_conversion;
 
-use thiserror;
-
 // /// Represents a standardized error format for frontend or external interfaces.
 // #[derive(serde::Serialize)]
 // pub struct CommandError {
@@ -44,8 +42,7 @@ use thiserror;
 //      pub kind: String,
 //      /// The error masage.
 //      pub message: String,
-//  }
-
+// }
 /// The top-level error type that aggregates all sub-module errors.
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum AppError {

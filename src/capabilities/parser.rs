@@ -28,7 +28,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, atomic::AtomicBool};
 use std::sync::atomic::Ordering;
 
-use tokio::sync::mpsc::Sender;
+use crossbeam_channel::Sender;
 use wyhash::WyHash;
 
 use crate::errors::AppError;
@@ -62,7 +62,7 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
     const BATCH_SIZE: usize = 64;
 
     if input_vec_paths.is_empty() {
-        tx.blocking_send(PipelineMessage::Signal(
+        tx.send(PipelineMessage::Signal(
             PipelineStatus::Finished
             )).unwrap();
 
@@ -82,7 +82,7 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
 
     for input_path in seen_paths {
         if stop_signal.load(Ordering::SeqCst) {
-            tx.blocking_send(PipelineMessage::Signal(
+            tx.send(PipelineMessage::Signal(
                 PipelineStatus::Aborted
             )).unwrap();
             return;
@@ -90,7 +90,7 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
 
         if pending_paths.len() == BATCH_SIZE {
             processed_count += BATCH_SIZE;
-            tx.blocking_send(PipelineMessage::Signal(
+            tx.send(PipelineMessage::Signal(
                 PipelineStatus::Progress(
                     ProgressData::Size(
                         processed_count
@@ -109,7 +109,7 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
         let Ok(current_path) = path_status else {
             let err = path_status.unwrap_err();
             let app_err = AppError::from_io_file_error(Some(err), input_path.to_owned(), None);
-            tx.blocking_send(PipelineMessage::Data(
+            tx.send(PipelineMessage::Data(
                 ResultOutcome::Errors(
                     FileResultErrors {
                         errors: vec![app_err.into()],
@@ -125,7 +125,7 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
 
     if !pending_paths.is_empty() {
         processed_count += pending_paths.len();
-        tx.blocking_send(PipelineMessage::Signal(
+        tx.send(PipelineMessage::Signal(
             PipelineStatus::Progress(
                 ProgressData::Size(
                     processed_count 

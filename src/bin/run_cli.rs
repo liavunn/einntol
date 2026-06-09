@@ -28,6 +28,8 @@ use std::sync::atomic::AtomicBool;
 
 use miette;
 use tokio::time::{sleep, Duration};
+use tokio::sync::mpsc::{Sender, Receiver, channel};
+use tokio::sync::watch;
 
 use einntol::utils::{
     file_utils_cli,
@@ -36,21 +38,23 @@ use einntol::utils::{
 use einntol::file_tools;
 use einntol::PipelineMessage;
 use einntol::PipelineStatus;
-use crate::cli::start_cli::start_cli;
+use einntol::cli::start_cli::start_cli;
 
-/// Main
-fn run_cli() -> miette::Result<()> {
-    let (tx, rx): (Sender<PipelineMessage>, Receiver<PipelineMessage>) = bounded::<PipelineMessage>(2000);
-    let einntol_quit_signal = Arc::new(AtomicBool::new(false));
-    let task_stop_signal = Arc::new(AtomicBool::new(false));
+/// run_cil
+#[tokio::main]
+async fn run_cli() -> miette::Result<()> {
+    let (start_tx, start_rx) = chennel::<PipelineMessage>(2048);
+    let (einntol_quit_signal_tx, einntol_quit_signal_rx) = watch::channel(false);
+    let (task_stop_signal_tx, task_stop_signal_rx) = watch::channel(false);
 
-    start_cli(einntol_quit_signal, task_stop_signal, tx.clone());
+    start_cli(einntol_quit_signal_rx, task_stop_signal_rx, tx.clone());
 
     loop {
         tokio::select! {
-            _ = sleep(Duration::from_millis(100)) => {
-                if einntol_quit_signal.load(Ordering::SeqCst) {
-                    println!("Byebye!");
+            _ = einntol_quit_signal_rx.changed() => {
+                if *einntol_quit_signal_rx.borrow() {
+                    task_stop_signal_tx.send(true).unwrap();
+                    println!("[EinnTol] Byebye!");
                     break;
                 }
             }

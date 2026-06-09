@@ -19,8 +19,6 @@
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
-use thiserror;
-
 /// Generic error types.
 #[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic, Clone)]
 pub enum GenericError {

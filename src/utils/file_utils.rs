@@ -25,10 +25,12 @@
 
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::mem;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use ignore::{ParallelVisitor, ParallelVisitorBuilder, WalkBuilder, WalkState, DirEntry};
 use tokio::sync::mpsc::Sender;
+use tokio::sync::watch;
 
 use crate::errors::AppError;
 use crate::modes::file_modes::{
@@ -38,25 +40,31 @@ use crate::modes::file_modes::{
 use crate::models::pipeline_outcome::ResultOutcome;
 use crate::models::file_pipeline_data::{
     FileResultPaths,
-    FileResultErrors
+    FileResultErrors,
 };
 use crate::PipelineMessage;
 use crate::PipelineStatus;
 
 struct FileVisitorBuilder {
     tx: Sender<PipelineMessage>,
-    stop_signal: Arc<AtomicBool>,
+    task_stop_signal_rx: watch::Receiver,
     mode: FileMode,
     name: Arc<str>,
+    datas_vec: Vec<PathBuf>,
+    errors_vec: Vec<AppError>,
+    count: i32,
 }
 
 impl<'a> ParallelVisitorBuilder<'a> for FileVisitorBuilder {
     fn build(&mut self) -> Box<dyn ParallelVisitor + 'a> {
         Box::new(FileVisitor {
             tx: self.tx.clone(),
-            stop_signal: self.stop_signal.clone(),
+            task_stop_signal_rx: self.task_stop_signal_rx.clone(),
             mode: self.mode,
             name: self.name.clone(),
+            datas_vec: mem::take(&mut self.datas_vec),
+            errors_vec: mem::take(&mut self.errors_vec),
+            count: self.count,
         })
     }
 }
@@ -64,14 +72,19 @@ impl<'a> ParallelVisitorBuilder<'a> for FileVisitorBuilder {
 struct FileVisitor {
     name: Arc<str>,
     mode: FileMode,
-    stop_signal: Arc<AtomicBool>,
-    tx: Sender<PipelineMessage>
+    task_stop_signal_rx: watch::Receiver,
+    tx: Sender<PipelineMessage>,
+    datas_vec: Vec<PathBuf>,
+    errors_vec: Vec<AppError>,
+    count: i32,
 }
 
 impl ParallelVisitor for FileVisitor {
     fn visit(&mut self, entry: Result<DirEntry, ignore::Error>) -> WalkState {
-        if self.stop_signal.load(Ordering::SeqCst) {
-            return WalkState::Quit;
+        if (self.count & 63) == 0 {
+            if *self.task_stop_signal_rx.borrow() {
+                return WalkState::Quit;
+            }
         }
 
         let Ok(entry) = entry else {
@@ -85,12 +98,20 @@ impl ParallelVisitor for FileVisitor {
                 Some(err_reason)
             );
 
-            self.tx.send(PipelineMessage::Data(
-                ResultOutcome::Errors(
-                    FileResultErrors {
-                        errors: vec![app_err.into()],
-                    })
+            self.errors_vec.push(app_err.into());
+
+            if self.errors_vec.len() == 64 {
+                let batch = mem::take(&mut self.errors_vec);
+
+                self.tx.blocking_send(PipelineMessage::Data(
+                    ResultOutcome::FileErrors(
+                        FileResultErrors {
+                            errors: batch,
+                        }
+                    )
                 )).unwrap();
+            }
+
 
             return WalkState::Continue;
         };
@@ -119,13 +140,19 @@ impl ParallelVisitor for FileVisitor {
             } 
         }
 
-            self.tx.send(PipelineMessage::Data(
-                ResultOutcome::Datas(
+        self.datas_vec.push(entry.path().to_path_buf());
+
+        if self.datas_vec.len() == 64 {
+            let batch = mem::take(&mut self.datas_vec);
+
+            self.tx.blocking_send(PipelineMessage::Data(
+                ResultOutcome::FilePaths(
                     FileResultPaths {
-                        paths: vec![entry.path().to_path_buf()],
+                        paths: batch,
                     }
                 )
             )).unwrap();
+        }
 
         WalkState::Continue
     }
@@ -150,7 +177,7 @@ pub fn find_paths(
     determined_paths: Vec<PathBuf>,
     name: &str,
     mode: FileMode,
-    stop_signal: &Arc<AtomicBool>,
+    task_stop_signal_rx: watch::Receiver,
     tx: &Sender<PipelineMessage>
 ) {
     let Some(first_determined_path) = determined_paths.first() else {
@@ -159,6 +186,8 @@ pub fn find_paths(
 
     let mut builder = WalkBuilder::new(first_determined_path); 
     let arc_str_name = Arc::from(name);
+    let mut datas_vec: Vec<PathBuf> = Vec::new();
+    let mut errors_vec: Vec<AppError> = Vec::new();
 
     // Add paths to the builder.
     for path in determined_paths.into_iter().skip(1) {
@@ -181,17 +210,45 @@ pub fn find_paths(
 
     let parallel_walker = builder.build_parallel();
 
+    let count = 0;
+
     let mut visitor_builder = FileVisitorBuilder {
-        stop_signal: stop_signal.clone(),
+        task_stop_signal_rx: task_stop_signal_rx.clone(),
         tx: tx.clone(),
         mode,
         name: Arc::clone(&arc_str_name),
+        datas_vec: mem::take(&mut datas_vec),
+        errors_vec: mem::take(&mut errors_vec),
+        count,
     };
  
-    tx.send(PipelineMessage::Signal(PipelineStatus::Starting)).unwrap();
+    tx.blocking_send(PipelineMessage::Signal(
+        PipelineStatus::Starting
+    )).unwrap();
 
     parallel_walker.visit(&mut visitor_builder);
 
-    tx.send(PipelineMessage::Signal(PipelineStatus::Finished)).unwrap();
-}
+    if !visitor_builder.datas_vec.is_empty() {
+        tx.blocking_send(PipelineMessage::Data(
+            ResultOutcome::FilePaths(
+                FileResultPaths{
+                    paths: visitor_builder.datas_vec
+                }
+            )
+        )).unwrap();
+    }
 
+    if !visitor_builder.errors_vec.is_empty() {
+        tx.blocking_send(PipelineMessage::Data(
+            ResultOutcome::FileErrors(
+                FileResultErrors{
+                    errors: visitor_builder.errors_vec
+                }
+            )
+        )).unwrap();
+    }
+
+    tx.blocking_send(PipelineMessage::Signal(
+        PipelineStatus::Finished
+    )).unwrap();
+}

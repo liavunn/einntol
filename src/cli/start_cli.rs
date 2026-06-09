@@ -26,16 +26,24 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 
 use tokio::sync::mpsc::Sender;
+use tokio::sync::watch;
 
-use crate::monitor::generic_monitor_cli::signal_monitor_cli::monitor_commands;
+use crate::monitor::generic_monitor_cli::signal_monitor_cli::monitor_task_commands;
 use crate::models::generic_pipeline::{
     PipelineMessage,
 };
 
 /// 
-pub fn start_cli(einntol_quit_signal: Arc<AtomicBool>, task_stop_signal: Arc<AtomicBool>, tx: Sender<PipelineMessage>) {
-    println!("Hi, einntol initialized.");
+pub async fn start_cli(einntol_quit_signal_rx: watch::Receiver, task_stop_signal: Arc<AtomicBool>, tx: Sender<PipelineMessage>) {
+    println!("[EinnTol] Hi, einntol initialized.");
 
-    monitor_commands(einntol_quit_signal, task_stop_signal, tx);
+    tokio::selesct! {
+        _ = signal::ctrl_c() => {
+            einntol_quit_signal_rx.send(true);
+            break;
+        }
+    }
+
+   ||| monitor_commands(einntol_quit_signal, task_stop_signal, tx);
     
 }

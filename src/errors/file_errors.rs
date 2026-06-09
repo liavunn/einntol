@@ -21,11 +21,9 @@
 
 use std::path::PathBuf;
 
-use thiserror;
-
 /// Specific error information during file operations.
 #[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic, Clone)]
-#[error("File error at {path:#?} : {error_type:#?}")]
+#[Error("File error at {path:#?} : {error_type:#?}")]
 pub struct FileOperationError {
     /// Specific error type.
     pub error_type: Option<FileError>,
@@ -43,14 +41,14 @@ impl From<FileError> for FileOperationError {
 }
 
 /// File-related error types.
-#[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic, Clone)]
+#[derive(Error, serde::Serialize, miette::Diagnostic, Clone, Debug)]
 pub enum FileError {
     /// The file at the specified path does not exist.
     #[error("The file not found.")]
     FileNotFound,
 
     /// The path at the specified path does not exist.
-    #[error("The path not found")]
+    #[Error("The path not found")]
     PathNotFound,
 
     /// The file at the specified path is corrupted.

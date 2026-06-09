@@ -22,7 +22,7 @@
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
-use crossbeam_channel::{Receiver};
+use tokio::sync::m::Receiver;
 
 use crate::models::generic_pipeline::{
     PipelineMessage,
