@@ -17,7 +17,6 @@
 #![deny(warnings)]
 #![deny(clippy::pedantic)]
 #![deny(clippy::all)]
-#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
@@ -28,7 +27,7 @@ use std::sync::atomic::AtomicBool;
 
 use miette;
 use tokio::time::{sleep, Duration};
-use tokio::sync::mpsc::{Sender, Receiver, channel};
+use tokio::sync::mpsc::{channel};
 use tokio::sync::watch;
 
 use einntol::utils::{
@@ -44,16 +43,24 @@ use einntol::cli::start_cli::start_cli;
 #[tokio::main]
 async fn run_cli() -> miette::Result<()> {
     let (start_tx, start_rx) = chennel::<PipelineMessage>(2048);
-    let (einntol_quit_signal_tx, einntol_quit_signal_rx) = watch::channel(false);
-    let (task_stop_signal_tx, task_stop_signal_rx) = watch::channel(false);
+    let (mut is_task_signal_tx, mut is_task_signal_rx) = watch::channel(false);
+    let (mut einntol_quit_signal_tx, mut einntol_quit_signal_rx) = watch::channel(false);
+    let (mut task_stop_signal_tx, mut task_stop_signal_rx) = watch::channel(false);
 
-    start_cli(einntol_quit_signal_rx, task_stop_signal_rx, tx.clone());
+    start_cli(
+        einntol_quit_signal_tx,
+        einntol_quit_signal_rx.clone(),
+        is_task_signal_tx,
+        is_task_signal_rx,
+        task_stop_signal_tx,
+        task_stop_signal_rx,
+        tx.clone()
+    ).await;
 
     loop {
         tokio::select! {
             _ = einntol_quit_signal_rx.changed() => {
                 if *einntol_quit_signal_rx.borrow() {
-                    task_stop_signal_tx.send(true).unwrap();
                     println!("[EinnTol] Byebye!");
                     break;
                 }

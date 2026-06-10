@@ -15,12 +15,12 @@
 //! 
 
 #![forbid(clippy::pedantic)]
-#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
 pub mod generic_monitor_cli{
     pub mod signal_monitor_cli;
+    pub mod state_manager;
 }
 

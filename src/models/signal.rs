@@ -26,32 +26,28 @@ use std::path::PathBuf;
 use crate::errors::AppError;
 use crate::impl_struct_debug_to_display;
 
-/// Represents the comprehensive results gathered during the file walking process.
-#[derive(Debug)]
-pub struct FileResults {
-    /// List of successfully discovered or validated file paths.
-    pub paths: Vec<PathBuf>,
+/// This struct is used to pass commands to the StateManager via channels.
+pub struct StateChange {
+    /// Signal identifier name.
+    pub signal_name: SignalName,
 
-    /// Collection of non-fatal errors encountered during the execution.
-    pub errors: Vec<AppError>,
+    /// Target state of the signal.
+    pub value: bool,
 }
 
-/// Represents the resulting paths from file discovery.
-#[derive(Debug)]
-pub struct FileResultPaths {
-    /// List of successfully discovered or validated file paths.
-    pub paths: Vec<PathBuf>,
-}
+pub enum SignalName {
+    /// Triggers the global shutdown process of the system.
+    einntol_quit_signal,
 
-/// Represents errors encountered during file discovery.
-#[derive(Debug)]
-pub struct FileResultErrors {
-    /// Collection of non-fatal errors encountered during the execution.
-    pub errors: Vec<AppError>,
-}
+    /// Stops the specific task currently running.
+    task_stop_signal,
 
-impl_struct_debug_to_display!(
-    (FileResults, paths, errors),
-    (FileResultPaths, paths),
-    (FileResultErrors, errors),
-);
+    /// Stops the command sender module and pauses monitoring of task commands.
+    monitor_task_commands_stop_signal,
+
+    /// Stops the execution of the EINNTOL command monitor.
+    monitor_einntol_commands_stop_signal,
+
+    /// Controls the overall startup or shutdown of the task monitoring system.
+    is_task_signal,
+}

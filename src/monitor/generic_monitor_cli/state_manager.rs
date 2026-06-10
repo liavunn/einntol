@@ -12,14 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! 
+//! Generic CLI Utilities.
 
-#![forbid(warnings)]
 #![forbid(clippy::pedantic)]
-#![forbid(clippy::all)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
+use tokio::sync::mpsc::channel;
+use tokio::sync::watch;
+
+use crate::monitor::generic_monitor_cli::signal_monitor_cli::{
+    monitor_mode,
+};
+use crate::models::signal::StateChange;
+
 /// 
-pub mod generic_derive;
+pub async fn state_manager(
+    einntol_quit_signal_tx: watch::Sender<bool>,
+    is_task_signal_tx: watch:: Sender<bool>,
+    task_stop_signal_tx: watch::Sender<bool>,
+    monitor_task_commands_stop_signal_tx: watch::Sender<bool>,
+) {
+    let (state_channel_tx, state_channel_rx) = channel::<StateChange>(2048);
+
+    monitor_mode()
+}
+ 

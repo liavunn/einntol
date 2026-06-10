@@ -17,7 +17,6 @@
 #![forbid(warnings)]
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
-#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
@@ -26,7 +25,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::mem;
-use std::sync::atomic::{AtomicBool, Ordering};
 
 use ignore::{ParallelVisitor, ParallelVisitorBuilder, WalkBuilder, WalkState, DirEntry};
 use tokio::sync::mpsc::Sender;
@@ -47,7 +45,7 @@ use crate::PipelineStatus;
 
 struct FileVisitorBuilder {
     tx: Sender<PipelineMessage>,
-    task_stop_signal_rx: watch::Receiver,
+    task_stop_signal_rx: watch::Receiver<bool>,
     mode: FileMode,
     name: Arc<str>,
     datas_vec: Vec<PathBuf>,
@@ -72,7 +70,7 @@ impl<'a> ParallelVisitorBuilder<'a> for FileVisitorBuilder {
 struct FileVisitor {
     name: Arc<str>,
     mode: FileMode,
-    task_stop_signal_rx: watch::Receiver,
+    task_stop_signal_rx: watch::Receiver<bool>,
     tx: Sender<PipelineMessage>,
     datas_vec: Vec<PathBuf>,
     errors_vec: Vec<AppError>,
@@ -177,7 +175,7 @@ pub fn find_paths(
     determined_paths: Vec<PathBuf>,
     name: &str,
     mode: FileMode,
-    task_stop_signal_rx: watch::Receiver,
+    task_stop_signal_rx: watch::Receiver<bool>,
     tx: &Sender<PipelineMessage>
 ) {
     let Some(first_determined_path) = determined_paths.first() else {

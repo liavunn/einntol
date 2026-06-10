@@ -15,37 +15,42 @@
 //! Generic CLI Utilities.
 
 #![forbid(clippy::pedantic)]
-#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
 use tokio::spawn;
 
-use tokio::signal;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc::Sender;
 use tokio::sync::watch;
 
-use crate::PipelineMessage;
-use crate::PipelineStatus;
+use crate::models::signal::{
+    StateChange,
+    SignalName,
+};
+
 
 /// 
 pub async fn monitor_mode(
+    state_channel_tx: Sender<StateChange>,
     is_task_signal_rx: watch::Receiver<bool>,
-    einntol_quit_signal_rx: watch::Receiver<bool>,
-    task_stop_signal_rx: watch::Receiver<bool>,
-    monitor_task_commands_stop_signal_rx: watch::Receiver<bool>,
-    tx: Sender<PipelineMessage>,
 ) {
+    let (monitor_einntol_commands_stop_signal_tx, monitor_einntol_commands_stop_signal_rx) = watch::channel(false);
+    let (monitor_task_commands_stop_signal_tx,  monitor_task_commands_stop_signal_rx) = watch::channel(false);
     spawn(async move {
+
         loop {
             tokio::select! {
                 _ = is_task_signal_rx.changed() => {
                     if *is_task_signal_rx.borrow() {
-                        monitor_task_commands(einntol_quit_signal_rx, task_stop_signal_rx, monitor_task_commands_stop_signal_rx,tx.clone()).await;
+                        monitor_task_commands_stop_signal_tx.send(false).unwrap();
+                        monitor_task_commands(state_channel_tx.clone(), monitor_task_commands_stop_signal_rx.clone()).await;
+                        monitor_einntol_commands_stop_signal_tx.send(true).unwrap();
                     } else {
-                        einntol
+                        monitor_einntol_commands_stop_signal_tx.send(false).unwrap();
+                        monitor_task_commands(state_channel_tx.clone(), monitor_einntol_commands_stop_signal_rx.clone()).await;
+                        monitor_task_commands_stop_signal_tx.send(true).unwrap();
                     }
                 }    
             }
@@ -64,10 +69,8 @@ pub async fn monitor_mode(
 /// # Panics
 /// * This function will panic if the pipeline message sending fails.
 pub async fn monitor_task_commands(
-    einntol_quit_signal_rx: watch::Receiver<bool>,
-    task_stop_signal_rx: watch::Receiver<bool>,
+    state_channel_tx: Sender<StateChange>,
     monitor_task_commands_stop_signal_rx: watch::Receiver<bool>,
-    tx: Sender<PipelineMessage>
 ) {
     let mut reader = BufReader::new(tokio::io::stdin()).lines();
 
@@ -77,20 +80,17 @@ pub async fn monitor_task_commands(
 
     loop {
         tokio::select! {
-            _ = signal::ctrl_c() => {
-                einntol_quit_signal_rx.send(true);
-                break;
-            }
-
             line = reader.next_line() => {
                 match line {
                     Ok(Some(input)) => {
                         match input.trim() {
                             "stop" => {
-                                task_stop_signal_rx.send(true);
-                                tx.send(PipelineMessage::Signal(
-                                PipelineStatus::Aborted
-                            )).await.unwrap();
+                                state_channel_tx.send(
+                                    StateChange {
+                                        signal_name: SignalName::task_stop_signal,
+                                        value: true,
+                                    }
+                                ).await.unwrap();
                             }
 
 
@@ -113,7 +113,10 @@ pub async fn monitor_task_commands(
     }
 }
 
-pub async fn monitor_einntol_commands(einntol_quit_signal_rx: watch::Receiver) {
+pub async fn monitor_einntol_commands(
+    state_channel_tx: Sender<StateChange>,
+    monitor_einntol_commands_stop_signal_rx: watch::Receiver<bool>,
+) {
     let mut reader = BufReader::new(tokio::io::stdin()).lines();
 
     println!("Entre \'bye\' to quit.");
@@ -125,10 +128,25 @@ pub async fn monitor_einntol_commands(einntol_quit_signal_rx: watch::Receiver) {
                     Ok(Some(input)) => {
                         match input.trim() {
                              "bye" => {
-                                 einntol_quit_signal_rx.send(true);
+                                 state_channel_tx.send(StateChange {
+                                     signal_name: SignalName::einntol_quit_signal,
+                                     value: true,
+                                 }).await.unwrap();
                              }
+
+                             _ => {}
                         }
                     }
+
+                    Ok(None) => break,
+
+                    Err(_) => break,
+                }
+            }
+
+            _stop = monitor_einntol_commands_stop_signal_rx.changed() => {
+                if *monitor_einntol_commands_stop_signal_rx.borrow() {
+                    break;
                 }
             }
         }

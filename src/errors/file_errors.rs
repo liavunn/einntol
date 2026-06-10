@@ -14,7 +14,6 @@
 
 //! Error types related ro file system operations.
 
-#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]

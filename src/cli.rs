@@ -14,10 +14,7 @@
 
 //! 
 
-#![forbid(warnings)]
 #![forbid(clippy::pedantic)]
-#![forbid(clippy::all)]
-#![forbid(clippy::cargo)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
