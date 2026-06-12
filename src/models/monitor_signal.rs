@@ -21,11 +21,6 @@
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
-use std::path::PathBuf;
-
-use crate::errors::AppError;
-use crate::impl_struct_debug_to_display;
-
 /// This struct is used to pass commands to the StateManager via channels.
 pub struct StateChange {
     /// Signal identifier name.
@@ -35,19 +30,14 @@ pub struct StateChange {
     pub value: bool,
 }
 
+/// Represents the name of a signal used to control the state of the system.
 pub enum SignalName {
     /// Triggers the global shutdown process of the system.
-    einntol_quit_signal,
+    EinnTolQuitSignal,
 
     /// Stops the specific task currently running.
-    task_stop_signal,
-
-    /// Stops the command sender module and pauses monitoring of task commands.
-    monitor_task_commands_stop_signal,
-
-    /// Stops the execution of the EINNTOL command monitor.
-    monitor_einntol_commands_stop_signal,
+    TaskStopSignal,
 
     /// Controls the overall startup or shutdown of the task monitoring system.
-    is_task_signal,
+    IsTaskSignal,
 }

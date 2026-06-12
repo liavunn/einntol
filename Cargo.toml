@@ -9,6 +9,14 @@ repository = "https://github.com/liavunn/einntol"
 keywords = ["cli", "utility", "rust"]
 categories = ["command-line-utilities"]
 
+[[bin]]
+name = "EinnTol_Linux_x64_CLI"
+path = "src/bin/run_cli"
+
+[[bin]]
+name = "EinnTol_Linux_x64_GUI"
+path = "src/bin/run_gui"
+
 [dependencies]
 miette = "7.6"
 fastrand = "2"
@@ -18,8 +26,12 @@ sysinfo = "0.39"
 ignore = "0.4"
 bitflags = "2"
 serde = { version = "1.0", features = ["derive"] }
-iced = "0.14"
+iced = { version = "0.14", optional = true }
 tokio = { version = "1.52", features = ["full"]}
+
+[feature]
+cli = []
+gui = ["iced"]
 
 [profile.release]
 lto = true

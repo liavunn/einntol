@@ -12,26 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The entry point of the Einntol GUI program, responsible for environment initialization.
+//! Generic CLI Utilities.
 
-#![deny(warnings)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::all)]
+#![forbid(clippy::pedantic)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
-use std::thread::scope;
-use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use tokio::sync::mpsc;
+use tokio::sync::watch;
 
-use iced;
+/// Standard Input Line Reader.
+pub type StdinLineReader = tokio::io::Lines<tokio::io::BufReader<tokio::io::Stdin>>;
 
-use crossbeam_channel::{bounded, Sender, Receiver};
-use einntol::file_tools;
-use einntol::PipelineMessage;
-use einntol::PipelineStatus;
-
-/// Main
-fn main() {
+/// 
+pub async fn reader_manager(
+    f
+) {
 }
+ 

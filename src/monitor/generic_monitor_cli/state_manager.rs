@@ -19,23 +19,44 @@
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
-use tokio::sync::mpsc::channel;
+use tokio::sync::mpsc;
 use tokio::sync::watch;
 
 use crate::monitor::generic_monitor_cli::signal_monitor_cli::{
     monitor_mode,
 };
-use crate::models::signal::StateChange;
+use crate::models::monitor_commands_cli::MonitorCommand;
+use crate::models::monitor_signal::{
+    StateChange,
+    SignalName,
+};
 
 /// 
-pub async fn state_manager(
+pub async fn run_state_manager(
+    monitor: mpsc::Sender<MonitorCommand>,
     einntol_quit_signal_tx: watch::Sender<bool>,
     is_task_signal_tx: watch:: Sender<bool>,
+    is_task_signal_rx: watch:: Receiver<bool>,
     task_stop_signal_tx: watch::Sender<bool>,
-    monitor_task_commands_stop_signal_tx: watch::Sender<bool>,
+    state_channel_tx: mpsc::Sender<StateChange>,
+    state_channel_rx: &mut mpsc::Receiver<StateChange>,
 ) {
-    let (state_channel_tx, state_channel_rx) = channel::<StateChange>(2048);
+    monitor_mode(state_channel_tx, is_task_signal_rx.clone());
 
-    monitor_mode()
+    while let Some(state) = state_channel_rx.recv().await {
+        match state.signal_name {
+            SignalName::EinnTolQuitSignal => {
+                einntol_quit_signal_tx.send(state.value).unwrap();
+            },
+
+            SignalName::TaskStopSignal => {
+                task_stop_signal_tx.send(state.value).unwrap();
+            },
+
+            SignalName::IsTaskSignal => {
+                is_task_signal_tx.send(state.value).unwrap();
+            },
+        }
+    }
 }
  

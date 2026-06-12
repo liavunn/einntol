@@ -43,4 +43,4 @@ use crate::models::generic_pipeline::{
 };
 use crate::file_utils::find_paths;
 
-
+get_raw_capability_chain

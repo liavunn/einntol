@@ -12,26 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The entry point of the Einntol GUI program, responsible for environment initialization.
+//! Global configuration modes and flag definitions.
 
-#![deny(warnings)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::all)]
+#![forbid(warnings)]
+#![forbid(clippy::pedantic)]
+#![forbid(clippy::all)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
-use std::thread::scope;
-use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use tokio::sync::mpsc;
+use tokio::sync::watch;
+use crate::models::monitor_signal::StateChange;
 
-use iced;
+/// 
+pub struct StateChannel {
+    tx: mpsc::Sender<StateChange>,
+    rx: mpsc::Receiver<StateChange>,
+}
 
-use crossbeam_channel::{bounded, Sender, Receiver};
-use einntol::file_tools;
-use einntol::PipelineMessage;
-use einntol::PipelineStatus;
+/// 
+pub struct IsTaskSignal {
+    tx: watch::Sender<bool>,
+    rx: watch::Receiver<bool>,
+}
 
-/// Main
-fn main() {
+/// 
+pub struct EinnTolQuitSignal {
+    tx: watch::Sender<bool>,
+    rx: watch::Receiver<bool>,
+}
+
+/// 
+pub struct TaskStopSignal {
+    tx: watch::Sender<bool>,
+    rx: watch::Receiver<bool>,
 }

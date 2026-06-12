@@ -28,6 +28,7 @@ use std::sync::{Arc, atomic::AtomicBool};
 use std::sync::atomic::Ordering;
 
 use tokio::sync::mpsc::Sender;
+use tokio::sync::watch;
 use wyhash::WyHash;
 
 use crate::errors::AppError;
@@ -57,7 +58,15 @@ type WyHashSet<T> = HashSet<T, BuildHasherDefault<WyHash>>;
 ///
 /// # Panics
 /// * This function will panic if the pipeline message sending fails.
-pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, stop_signal: &Arc<AtomicBool>, tx: &Sender<PipelineMessage>) {
+pub fn scan_and_find(
+    input_vec_paths: &[PathBuf],
+    name: &str,
+    mode: FileMode,
+    task_stop_signal_rx: watch::Receiver<bool>,
+    tx: &Sender<PipelineMessage>,
+    capability_chain: PathBuf,
+) {
+    
     const BATCH_SIZE: usize = 64;
 
     if input_vec_paths.is_empty() {
@@ -79,12 +88,16 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
         }
     }
 
+    let count = 0;
+
     for input_path in seen_paths {
-        if stop_signal.load(Ordering::SeqCst) {
-            tx.blocking_send(PipelineMessage::Signal(
-                PipelineStatus::Aborted
-            )).unwrap();
-            return;
+        if (count & 63) == 0 {
+            if *task_stop_signal_rx.borrow() {
+                tx.blocking_send(PipelineMessage::Signal(
+                    PipelineStatus::Aborted
+                )).unwrap();
+                return;
+            }
         }
 
         if pending_paths.len() == BATCH_SIZE {
@@ -97,7 +110,7 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
                 )
             )).unwrap();
 
-            find_paths(pending_paths, name, mode, &stop_signal.clone(), &tx.clone());
+            find_paths(pending_paths, name, mode, task_stop_signal_rx.clone(), &tx.clone());
 
             pending_paths = Vec::with_capacity(BATCH_SIZE);
         }
@@ -109,7 +122,7 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
             let err = path_status.unwrap_err();
             let app_err = AppError::from_io_file_error(Some(err), input_path.to_owned(), None);
             tx.blocking_send(PipelineMessage::Data(
-                ResultOutcome::Errors(
+                ResultOutcome::FileErrors(
                     FileResultErrors {
                         errors: vec![app_err.into()],
                     }
@@ -132,7 +145,7 @@ pub fn scan_and_find(input_vec_paths: &[PathBuf], name: &str, mode: FileMode, st
             )
         )).unwrap();
         
-        find_paths(pending_paths, name, mode, stop_signal, tx);
+        find_paths(pending_paths, name, mode, task_stop_signal_rx.clone(), tx);
     }
 }
 

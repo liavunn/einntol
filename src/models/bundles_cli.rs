@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The entry point of the Einntol GUI program, responsible for environment initialization.
+//! Global configuration modes and flag definitions.
 
-#![deny(warnings)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::all)]
+#![forbid(warnings)]
+#![forbid(clippy::pedantic)]
+#![forbid(clippy::all)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
-use std::thread::scope;
-use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use tokio::sync::mpsc;
+use crate::models::monitor_commands_cli::MonitorCommandCLI;
 
-use iced;
+/// 
+pub struct ParserChannelCLI {
+    pub tx: mpsc::Sender<String>,
+    pub rx: mpsc::Receiver<String>,
+}
 
-use crossbeam_channel::{bounded, Sender, Receiver};
-use einntol::file_tools;
-use einntol::PipelineMessage;
-use einntol::PipelineStatus;
-
-/// Main
-fn main() {
+///
+pub struct MonitorChannelCLI {
+    pub tx: mpsc::Sender<MonitorCommandCLI>,
+    pub rx: mpsc::Receiver<MonitorCommandCLI>,
 }

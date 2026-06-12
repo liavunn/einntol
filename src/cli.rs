@@ -19,5 +19,8 @@
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
  
+///
+pub mod reader_manager;
+
 /// 
-pub mod start_cli;
+pub mod start_cli_logic;

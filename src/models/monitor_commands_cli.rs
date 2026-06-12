@@ -12,26 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The entry point of the Einntol GUI program, responsible for environment initialization.
+//! Global configuration modes and flag definitions.
 
-#![deny(warnings)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::all)]
+#![forbid(warnings)]
+#![forbid(clippy::pedantic)]
+#![forbid(clippy::all)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
-use std::thread::scope;
-use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
-
-use iced;
-
-use crossbeam_channel::{bounded, Sender, Receiver};
-use einntol::file_tools;
-use einntol::PipelineMessage;
-use einntol::PipelineStatus;
-
-/// Main
-fn main() {
+/// Represents commands sent from the user input to control monitoring tasks.
+pub enum MonitorCommandCLI {
+    /// Forces the currently active monitor process to stop immediately.
+    Stop,
 }
+

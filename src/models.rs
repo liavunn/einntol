@@ -22,7 +22,16 @@
 #![forbid(missing_docs)]
 
 /// 
-pub mod signal;
+pub mod bundles_cli;
+
+/// 
+pub mod generic_bundles;
+
+/// 
+pub mod monitor_commands_cli;
+
+/// 
+pub mod monitor_signal;
 
 /// 
 pub mod generic_pipeline;
@@ -32,3 +41,6 @@ pub mod pipeline_outcome;
 
 /// 
 pub mod file_pipeline_data;
+
+/// 
+pub mod parser_pipeline_data;
