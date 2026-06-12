@@ -22,6 +22,7 @@
 #![forbid(missing_docs)]
 
 use tokio::sync::mpsc;
+use tokio::sync::watch;
 use crate::models::monitor_commands_cli::MonitorCommandCLI;
 
 /// 
@@ -35,3 +36,16 @@ pub struct MonitorChannelCLI {
     pub tx: mpsc::Sender<MonitorCommandCLI>,
     pub rx: mpsc::Receiver<MonitorCommandCLI>,
 }
+
+/// 
+pub struct MonitorEinnTolCommandsStopSignal {
+    pub tx: watch::Sender<bool>,
+    pub rx: watch::Receiver<bool>,
+}
+
+/// 
+pub struct MonitorTaskCommandsStopSignal {
+    pub tx: watch::Sender<bool>,
+    pub rx: watch::Receiver<bool>,
+}
+

@@ -25,32 +25,46 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
 use tokio::sync::watch;
 
-use crate::models::monitor_commands_cli::MonitorCommand;
+use crate::models::monitor_commands_cli::MonitorCommandCLI;
 use crate::models::monitor_signal::{
     StateChange,
     SignalName,
 };
+use crate::models::bundles_cli::{
+    MonitorTaskCommandsStopSignal,
+    MonitorEinnTolCommandsStopSignal,
+};
 
 /// 
 pub async fn monitor_mode(
-    monitor_rx: mpsc::Sender<MonitorCommand>,
+    monitor_rx: watch::Receiver<String>,
     state_channel_tx: mpsc::Sender<StateChange>,
     mut is_task_signal_rx: watch::Receiver<bool>,
 ) {
     let (monitor_einntol_commands_stop_signal_tx, monitor_einntol_commands_stop_signal_rx) = watch::channel(false);
+    let monitor_einntol_commands_stop_signal = MonitorEinnTolCommandsStopSignal {
+        tx: monitor_einntol_commands_stop_signal_tx,
+        rx: monitor_einntol_commands_stop_signal_rx,
+    }
+
     let (monitor_task_commands_stop_signal_tx,  monitor_task_commands_stop_signal_rx) = watch::channel(false);
+    let monitor_task_commands_stop_signal = MonitorTaskCommandsStopSignal {
+        tx: monitor_task_commands_stop_signal_tx,
+        rx: monitor_task_commands_stop_signal_rx,
+    }
+
     spawn(async move {
         loop {
             tokio::select! {
                 _ = is_task_signal_rx.changed() => {
                     if *is_task_signal_rx.borrow() {
-                        monitor_task_commands_stop_signal_tx.send(false).unwrap();
-                        monitor_task_commands(state_channel_tx.clone(), monitor_task_commands_stop_signal_rx.clone()).await;
-                        monitor_einntol_commands_stop_signal_tx.send(true).unwrap();
+                        monitor_task_commands_stop_signal.tx.send(false).unwrap();
+                        monitor_task_commands(state_channel_tx.clone(), monitor_task_commands_stop_signal.rx.clone()).await;
+                        monitor_einntol_commands_stop_signal.tx.send(true).unwrap();
                     } else {
-                        monitor_einntol_commands_stop_signal_tx.send(false).unwrap();
-                        monitor_task_commands(state_channel_tx.clone(), monitor_einntol_commands_stop_signal_rx.clone()).await;
-                        monitor_task_commands_stop_signal_tx.send(true).unwrap();
+                        monitor_einntol_commands_stop_signal.tx.send(false).unwrap();
+                        monitor_task_commands(state_channel_tx.clone(), monitor_einntol_commands_stop_signal.rx.clone()).await;
+                        monitor_task_commands_stop_signal.tx.send(true).unwrap();
                     }
                 }    
             }

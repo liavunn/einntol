@@ -21,13 +21,20 @@
 
 use tokio::sync::mpsc;
 use tokio::sync::watch;
+use crate::models::monitor_commands_cli::MonitorCommandCLI;
 
 /// Standard Input Line Reader.
 pub type StdinLineReader = tokio::io::Lines<tokio::io::BufReader<tokio::io::Stdin>>;
 
 /// 
 pub async fn reader_manager(
-    f
+    monitor_channel_tx: mpsc::Sender<String>,
+    parser_channel_tx: mpsc::Sender<MonitorCommandCLI>,
 ) {
+    let reader = StdinLineReader;
+
+    tokio::select! {
+        line = reader.next_line() => {
+        }
+    }
 }
- 

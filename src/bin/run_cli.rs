@@ -38,7 +38,10 @@ use einntol::cli::start_cli_logic::start_cli;
 use einntol::models::monitor_signal::StateChange;
 use einntol::models::monitor_commands_cli::MonitorCommandCLI;
 use einntol::models::generic_bundles::{
-    StateChannel
+    StateChannel,
+    IsTaskSignal,
+    EinnTolQuitSignal,
+    TaskStopSignal,
 };
 use einntol::models::bundles_cli::{
     ParserChannelCLI,
@@ -53,8 +56,6 @@ use einntol::utils::{
 /// run_cil
 #[tokio::main]
 async fn main() -> miette::Result<()> {
-    let mut reader = BufReader::new(tokio::io::stdin()).lines();
-
     let (parser_channel_tx, parser_channel_rx) = channel::<String>(2048);
     let parser_channel = ParserChannelCLI {
         tx: parser_channel_tx,
@@ -65,39 +66,45 @@ async fn main() -> miette::Result<()> {
     let monitor_channel = MonitorChannelCLI {
         tx: monitor_channel_tx,
         rx: monitor_channel_rx,
-    }
+    };
 
     let (state_channel_tx, state_channel_rx) = channel::<StateChange>(2048);
     let state_channel = StateChannel {
         tx: state_channel_tx,
         rx: state_channel_rx,
-    }
+    };
 
     let (mut is_task_signal_tx, mut is_task_signal_rx) = watch::channel(false);
+    let is_task_signal = IsTaskSignal {
+        tx: is_task_signal_tx,
+        rx: is_task_signal_rx,
+    };
+
     let (mut einntol_quit_signal_tx, mut einntol_quit_signal_rx) = watch::channel(false);
+    let einntol_quit_signal = EinnTolQuitSignal {
+        tx: einntol_quit_signal_tx,
+        rx: einntol_quit_signal_rx,
+    };
+
     let (mut task_stop_signal_tx, mut task_stop_signal_rx) = watch::channel(false);
+    let task_stop_signal = TaskStopSignal {
+        tx: task_stop_signal_tx,
+        rx: task_stop_signal_rx,
+    };
 
     start_cli(
-        parser_tx,
-        parser_rx,
-        monitor_tx,
-        monitor_rx,
-        einntol_quit_signal_tx,
-        einntol_quit_signal_rx.clone(),
-        is_task_signal_tx,
-        is_task_signal_rx,
-        task_stop_signal_tx,
-        task_stop_signal_rx,
-        state_channel_tx,
-        state_channel_rx,
-        start_tx.clone(),
-        start_rx.clone(),
+        parser_channel,
+        monitor_channel,
+        einntol_quit_signal,
+        is_task_signal,
+        task_stop_signal,
+        state_channel,
     ).await;
 
     loop {
         tokio::select! {
-            _ = einntol_quit_signal_rx.changed() => {
-                if *einntol_quit_signal_rx.borrow() {
+            _ = einntol_quit_signal.rx.changed() => {
+                if *einntol_quit_signal.rx.borrow() {
                     println!("[EinnTol] Byebye!");
                     break;
                 }
