@@ -28,28 +28,39 @@ pub type StdinLineReader = tokio::io::Lines<tokio::io::BufReader<tokio::io::Stdi
 
 /// 
 pub async fn reader_manager(
-    monitor_channel_tx: mpsc::Sender<String>,
-    parser_channel_tx: mpsc::Sender<MonitorCommandCLI>,
+    monitor_channel_tx: mpsc::Sender<MonitorCommandCLI>,
+    parser_channel_tx: mpsc::Sender<String>,
 ) {
     let reader = StdinLineReader;
 
-    tokio::select! {
-        line = reader.next_line() => {
-            match line.split() {
-                ["stop"] => {
-                    monitor_channel_tx.seend(
-                        MonitorCommandCLI::Stop
+    loop {
+        tokio::select! {
+            line = reader.next_line() => {
+                match line.split("||").map(|str| str.trim()).collect::<Vec<&str>>() {
+                    ["bye"] => {
+                        monitor_channel_tx.send(
+                            MonitorCommandCLI::EinnTolQuit
                         ).unwrap();
-                },
+                        break;
+                    },
 
-                [first, rest @ ..] => {
-                    
-                }
+                    ["stop"] => {
+                        monitor_channel_tx.send(
+                            MonitorCommandCLI::Stop
+                        ).unwrap();
+                    },
 
-                _ => {
-                    monitor_channel_tx.send(
-                        MonitorCommandCLI::Other
-                    ).unwrap()
+                    [first, ref rest @ ..] if !first.is_empty() && !rest.is_empty() && rest.iter().all(|str| !str.is_empty()) => {
+                        parser_channel_tx.send(
+                            line
+                        ).unwrap();
+                    },
+
+                    _ => {
+                        monitor_channel_tx.send(
+                            MonitorCommandCLI::Other
+                        ).unwrap();
+                    },
                 }
             }
         }

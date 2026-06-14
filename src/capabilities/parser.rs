@@ -34,4 +34,11 @@ use crate::errors::AppError;
 pub async fn convert_capability_chain(
     parser_channel_rx: mpsc::Receiver<String>
 ) {
+    let unchecked_parser = String::new();
+
+    tokio::select! {
+        Some(parser) = parser_channel_rx.recv().await.unwrap() => {
+            unchecked_parser = parser;
+        },
+    }
 }
