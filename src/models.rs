@@ -31,7 +31,7 @@ pub mod generic_bundles;
 pub mod monitor_commands_cli;
 
 /// 
-pub mod monitor_signal;
+pub mod state_signal;
 
 /// 
 pub mod generic_pipeline;

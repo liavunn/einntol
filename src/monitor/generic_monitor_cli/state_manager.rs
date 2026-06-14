@@ -23,12 +23,13 @@ use tokio::sync::mpsc;
 use tokio::sync::watch;
 
 use crate::monitor::generic_monitor_cli::signal_monitor_cli::{
-    monitor_mode,
+    monitor_commands,
 };
-use crate::models::monitor_signal::{
+use crate::models::state_signal::{
     StateChange,
     SignalName,
 };
+use crate::models::monitor_commands_cli::MonitorCommandCLI;
 use crate::models::generic_bundles::{
     StateChannel,
     IsTaskSignal,
@@ -42,14 +43,14 @@ use crate::models::bundles_cli::{
 
 /// 
 pub async fn run_state_manager(
-    monitor_channel_rx: watch::Receiver<String>,
+    monitor_channel_rx: watch::Receiver<MonitorCommandCLI>,
     is_task_signal: IsTaskSignal,
     state_channel: StateChannel,
     einntol_quit_signal_tx: watch::Sender<bool>,
     task_stop_signal_tx: watch::Sender<bool>,
 ) {
-    monitor_mode(
-        monitor_channel_rx.clone(),
+    monitor_commands(
+        &mut monitor_channel_rx,
         state_channel.tx,
         is_task_signal.rx.clone()
         );

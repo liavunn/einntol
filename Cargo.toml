@@ -11,11 +11,11 @@ categories = ["command-line-utilities"]
 
 [[bin]]
 name = "EinnTol_Linux_x64_CLI"
-path = "src/bin/run_cli"
+path = "src/bin/run_cli.rs"
 
 [[bin]]
 name = "EinnTol_Linux_x64_GUI"
-path = "src/bin/run_gui"
+path = "src/bin/run_gui.rs"
 
 [dependencies]
 miette = "7.6"
@@ -29,7 +29,7 @@ serde = { version = "1.0", features = ["derive"] }
 iced = { version = "0.14", optional = true }
 tokio = { version = "1.52", features = ["full"]}
 
-[feature]
+[features]
 cli = []
 gui = ["iced"]
 

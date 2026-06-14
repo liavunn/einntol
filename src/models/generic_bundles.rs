@@ -23,28 +23,40 @@
 
 use tokio::sync::mpsc;
 use tokio::sync::watch;
-use crate::models::monitor_signal::StateChange;
+use crate::models::state_signal::StateChange;
 
 /// 
 pub struct StateChannel {
-    tx: mpsc::Sender<StateChange>,
-    rx: mpsc::Receiver<StateChange>,
+    /// 
+    pub tx: mpsc::Sender<StateChange>,
+
+    /// 
+    pub rx: mpsc::Receiver<StateChange>,
 }
 
 /// 
 pub struct IsTaskSignal {
-    tx: watch::Sender<bool>,
-    rx: watch::Receiver<bool>,
+    /// 
+    pub tx: watch::Sender<bool>,
+
+    /// 
+    pub rx: watch::Receiver<bool>,
 }
 
 /// 
 pub struct EinnTolQuitSignal {
-    tx: watch::Sender<bool>,
-    rx: watch::Receiver<bool>,
+    /// 
+    pub tx: watch::Sender<bool>,
+
+    /// 
+    pub rx: watch::Receiver<bool>,
 }
 
 /// 
 pub struct TaskStopSignal {
-    tx: watch::Sender<bool>,
-    rx: watch::Receiver<bool>,
+    /// 
+    pub tx: watch::Sender<bool>,
+
+    /// 
+    pub rx: watch::Receiver<bool>,
 }

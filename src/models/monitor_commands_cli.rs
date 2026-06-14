@@ -23,7 +23,13 @@
 
 /// Represents commands sent from the user input to control monitoring tasks.
 pub enum MonitorCommandCLI {
+    /// 
+    EinnTolQuit,
+
     /// Forces the currently active monitor process to stop immediately.
     Stop,
+
+    /// 
+    Other,
 }
 

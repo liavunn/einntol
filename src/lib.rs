@@ -23,6 +23,30 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
+pub mod prelude {
+    use crate::file_tools;
+    use crate::PipelineMessage;
+    use crate::PipelineStatus;
+    use crate::models::monitor_signal::StateChange;
+    use crate::models::generic_bundles::{
+        StateChannel,
+        IsTaskSignal,
+        EinnTolQuitSignal,
+        TaskStopSignal,
+    };
+
+    use crate::models::monitor_commands_cli::MonitorCommandCLI;
+    use crate::cli::start_cli_logic::start_cli;
+    use crate::models::bundles_cli::{
+        ParserChannelCLI,
+        MonitorChannelCLI,
+    };
+    use crate::utils::{
+        file_utils_cli,
+        generic_utils_cli
+    };
+}
+
 /// Error handling utilities and custom error types.
 pub mod errors;
 

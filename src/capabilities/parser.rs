@@ -27,20 +27,11 @@ use std::path::PathBuf;
 use std::sync::{Arc, atomic::AtomicBool};
 use std::sync::atomic::Ordering;
 
-use crossbeam_channel::Sender;
-use wyhash::WyHash;
+use tokio::sync::mpsc;
 
 use crate::errors::AppError;
-use crate::modes::file_modes::FileMode;
-use crate::models::pipeline_outcome::ResultOutcome;
-use crate::models::file_pipeline_data::{
-    FileResultErrors,
-};
-use crate::models::generic_pipeline::{
-    PipelineMessage,
-    PipelineStatus,
-    ProgressData,
-};
-use crate::file_utils::find_paths;
 
-get_raw_capability_chain
+pub async fn convert_capability_chain(
+    parser_channel_rx: mpsc::Receiver<String>
+) {
+}

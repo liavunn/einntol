@@ -35,6 +35,23 @@ pub async fn reader_manager(
 
     tokio::select! {
         line = reader.next_line() => {
+            match line.split() {
+                ["stop"] => {
+                    monitor_channel_tx.seend(
+                        MonitorCommandCLI::Stop
+                        ).unwrap();
+                },
+
+                [first, rest @ ..] => {
+                    
+                }
+
+                _ => {
+                    monitor_channel_tx.send(
+                        MonitorCommandCLI::Other
+                    ).unwrap()
+                }
+            }
         }
     }
 }

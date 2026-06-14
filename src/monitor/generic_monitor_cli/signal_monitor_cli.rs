@@ -26,51 +26,10 @@ use tokio::sync::mpsc;
 use tokio::sync::watch;
 
 use crate::models::monitor_commands_cli::MonitorCommandCLI;
-use crate::models::monitor_signal::{
+use crate::models::state_signal::{
     StateChange,
     SignalName,
 };
-use crate::models::bundles_cli::{
-    MonitorTaskCommandsStopSignal,
-    MonitorEinnTolCommandsStopSignal,
-};
-
-/// 
-pub async fn monitor_mode(
-    monitor_rx: watch::Receiver<String>,
-    state_channel_tx: mpsc::Sender<StateChange>,
-    mut is_task_signal_rx: watch::Receiver<bool>,
-) {
-    let (monitor_einntol_commands_stop_signal_tx, monitor_einntol_commands_stop_signal_rx) = watch::channel(false);
-    let monitor_einntol_commands_stop_signal = MonitorEinnTolCommandsStopSignal {
-        tx: monitor_einntol_commands_stop_signal_tx,
-        rx: monitor_einntol_commands_stop_signal_rx,
-    }
-
-    let (monitor_task_commands_stop_signal_tx,  monitor_task_commands_stop_signal_rx) = watch::channel(false);
-    let monitor_task_commands_stop_signal = MonitorTaskCommandsStopSignal {
-        tx: monitor_task_commands_stop_signal_tx,
-        rx: monitor_task_commands_stop_signal_rx,
-    }
-
-    spawn(async move {
-        loop {
-            tokio::select! {
-                _ = is_task_signal_rx.changed() => {
-                    if *is_task_signal_rx.borrow() {
-                        monitor_task_commands_stop_signal.tx.send(false).unwrap();
-                        monitor_task_commands(state_channel_tx.clone(), monitor_task_commands_stop_signal.rx.clone()).await;
-                        monitor_einntol_commands_stop_signal.tx.send(true).unwrap();
-                    } else {
-                        monitor_einntol_commands_stop_signal.tx.send(false).unwrap();
-                        monitor_task_commands(state_channel_tx.clone(), monitor_einntol_commands_stop_signal.rx.clone()).await;
-                        monitor_task_commands_stop_signal.tx.send(true).unwrap();
-                    }
-                }    
-            }
-        }
-    });
-}
 
 /// Monitor input and send a signal upon detecting a command.
 ///
@@ -82,86 +41,34 @@ pub async fn monitor_mode(
 ///
 /// # Panics
 /// * This function will panic if the pipeline message sending fails.
-pub async fn monitor_task_commands(
+pub async fn monitor_commands(
+    moniotr_channel_rx: &mut mpsc::Receiver<MonitorCommandCLI>,
     state_channel_tx: mpsc::Sender<StateChange>,
     mut monitor_task_commands_stop_signal_rx: watch::Receiver<bool>,
 ) {
-    let mut reader = BufReader::new(tokio::io::stdin()).lines();
-
     println!("Enter 'stop' to terminate the task.");
 
-    println!("Entre \'bye\' to quit.");
-
     loop {
         tokio::select! {
-            line = reader.next_line() => {
+            line = moniotr_channel_rx.revc() => {
                 match line {
-                    Ok(Some(input)) => {
-                        match input.trim() {
-                            "stop" => {
-                                state_channel_tx.send(
-                                    StateChange {
-                                        signal_name: SignalName::TaskStopSignal,
-                                        value: true,
-                                    }
-                                ).await.unwrap();
+                    MonitorCommandCLI::Stop => {
+                        state_channel_tx.send(
+                            StateChange {
+                                signal_name: SignalName::TaskStopSignal,
+                                value: true,
                             }
-
-
-                            _ => println!("Please enter a valid command."),
-                        }
-                    },
-
-                    Ok(None) => break,
-
-                    Err(_) => break,
-                }
-            }
-
-            _stop = monitor_task_commands_stop_signal_rx.changed() => {
-                if *monitor_task_commands_stop_signal_rx.borrow() {
-                  break;
-                }
-            }
-        }
-    }
-}
-
-/// 
-pub async fn monitor_einntol_commands(
-    state_channel_tx: mpsc::Sender<StateChange>,
-    mut monitor_einntol_commands_stop_signal_rx: watch::Receiver<bool>,
-) {
-    let mut reader = BufReader::new(tokio::io::stdin()).lines();
-
-    println!("Entre \'bye\' to quit.");
-
-    loop {
-        tokio::select! {
-            line = reader.next_line() => {
-                match line {
-                    Ok(Some(input)) => {
-                        match input.trim() {
-                             "bye" => {
-                                 state_channel_tx.send(StateChange {
-                                     signal_name: SignalName::EinnTolQuitSignal,
-                                     value: true,
-                                 }).await.unwrap();
-                             }
-
-                             _ => {}
-                        }
+                        ).await.unwrap();
                     }
 
-                    Ok(None) => break,
+                    MonitorCommandCLI::EinnTolQuit => {
+                        state_channel_tx.send(StateChange {
+                            signal_name: SignalName::EinnTolQuitSignal,
+                            value: true,
+                        }).await.unwrap();
+                    }
 
-                    Err(_) => break,
-                }
-            }
-
-            _stop = monitor_einntol_commands_stop_signal_rx.changed() => {
-                if *monitor_einntol_commands_stop_signal_rx.borrow() {
-                    break;
+                    MonitorCommandCLI::Other => println!("Please enter a valid command."),
                 }
             }
         }
