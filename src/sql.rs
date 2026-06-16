@@ -12,32 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Error types related ro file system operations.
+//! 
 
+#![forbid(warnings)]
+#![forbid(clippy::pedantic)]
+#![forbid(clippy::all)]
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
 
-/// Generic error types.
-#[derive(thiserror::Error, Debug, miette::Diagnostic, Clone)]
-pub enum GenericError {
-    /// Invalid input provided.
-    #[error("Invalid Input")]
-    InvalidData,
-
-    /// The operation was interrupted.
-    #[error("Interrupted operation")]
-    Interrupted,
-
-    /// An unexpected end-of-file was reached.
-    #[error("Unexpected EOF")]
-    UnexpectedEof,
-
-    /// Generic input/output error with a descriptive message.
-    #[error("IO Error")]
-    IOError(String),
-
-    /// Is a None Error.
-    #[error("The error is None")]
-    NoneError,
-}   
+/// 
+pub mod initialization_sql;

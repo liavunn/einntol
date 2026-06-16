@@ -22,8 +22,10 @@
 #![forbid(missing_docs)]
 
 use tokio::signal;
+use tokio::spawn;
 use tokio::sync::mpsc;
 use tokio::sync::watch;
+use sqlx::SQLitePool;
 
 use crate::models::generic_pipeline::PipelineMessage;
 use crate::models::monitor_signal::StateChange;
@@ -40,9 +42,9 @@ use crate::models::bundles_cli::{
     MonitorChannelCLI,
 };
 
-
 /// 
 pub async fn start_cli(
+    pool_sql: SqLitePool,
     parser_channel: ParserChannelCLI,
     monitor_channel: MonitorCommandCLI,
     einntol_quit_signal: EinnTolQuitSignal,
@@ -53,13 +55,22 @@ pub async fn start_cli(
     println!("[EinnTol] Hi, einntol initialized.");
 
     tokio::spawn (async move {
-        reader_manager();
-    })
+        reader_manager(
+            monitor_channel.tx,
+            parser_channel.tx,
+        );
+    });
 
     tokio::spawn (async move {
         run_state_manager(
+            monitor_channel.rx,
+            is_task_signal,
+            state_channel,
+            einntol_quit_signal.tx,
+            task_stop_signal.tx,
+
         );
-    })
+    });
 
     loop{
         tokio::select! {

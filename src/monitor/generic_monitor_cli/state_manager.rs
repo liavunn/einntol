@@ -50,7 +50,7 @@ pub async fn run_state_manager(
     task_stop_signal_tx: watch::Sender<bool>,
 ) {
     monitor_commands(
-        &mut monitor_channel_rx,
+        &mut *monitor_channel_rx,
         state_channel.tx,
         is_task_signal.rx.clone()
         );

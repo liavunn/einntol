@@ -18,7 +18,10 @@
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
- 
+
+///
+pub mod args;
+
 ///
 pub mod reader_manager;
 

@@ -23,11 +23,14 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
 
+/// 
 pub mod prelude {
+    use crate::cli::args::Args;
+    use crate::sql::initialization_sql::initialization_tables_sql;
     use crate::file_tools;
     use crate::PipelineMessage;
     use crate::PipelineStatus;
-    use crate::models::monitor_signal::StateChange;
+    use crate::models::state_signal::StateChange;
     use crate::models::generic_bundles::{
         StateChannel,
         IsTaskSignal,
@@ -67,6 +70,9 @@ pub mod modes;
 
 /// System monitoring and logging module.
 pub mod monitor;
+
+/// 
+pub mod sql;
 
 /// 
 pub mod handlers_cli;

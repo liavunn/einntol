@@ -27,20 +27,34 @@ use std::path::PathBuf;
 use std::sync::{Arc, atomic::AtomicBool};
 use std::sync::atomic::Ordering;
 
-use tokio::sync::mpsc;
+use clap::Parser;
 
 use crate::errors::AppError;
 
-pub async fn convert_capability_chain(
-    parser_channel_rx: mpsc::Receiver<String>
-) {
-    let unchecked_parser = String::new();
+#[derive(clap::Parser, Debug)]
+#[command(version = "1.0", about = "EinnTol")]
+pub struct Args {
+    /// 
+    #[arg(long = "globals", default_value = "config/globals.db")]
+    pub globals_path_sql: PathBuf,
 
-    tokio::select! {
-        Some(parser) = parser_channel_rx.recv().await.unwrap() => {
-            unchecked_parser = parser;
-        },
-    }
+    /// 
+    #[arg(long = "config-path", default_value = "config/configs.db")]
+    pub config_path_sql: PathBuf,
 
-    
+    /// 
+    #[arg(long = "log-path", default_value = "log/life_logs.db")]
+    pub log_path_sql: PathBuf,
+
+    /// 
+    #[arg(long = "external_config")]
+    pub external_config_toml: Option<PathBuf>,
+
+    /// 
+    #[arg(long)]
+    pub debug: Option<bool>,
+
+    /// 
+    #[arg(long = "last-chain", default_value_t = false)]
+    pub last_chain: bool,
 }

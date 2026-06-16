@@ -40,14 +40,14 @@ impl From<FileError> for FileOperationError {
 }
 
 /// File-related error types.
-#[derive(Error, serde::Serialize, miette::Diagnostic, Clone, Debug)]
+#[derive(thiserror::Error, , miette::Diagnostic, Clone, Debug)]
 pub enum FileError {
     /// The file at the specified path does not exist.
     #[error("The file not found.")]
     FileNotFound,
 
     /// The path at the specified path does not exist.
-    #[Error("The path not found")]
+    #[error("The path not found")]
     PathNotFound,
 
     /// The file at the specified path is corrupted.
