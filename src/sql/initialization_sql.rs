@@ -30,14 +30,22 @@ use sqlx::{
     query_as,
 };
 
+use crate::models::sql::{
+    LogEntry,
+    GlobalsEntry,
+    ConfigEntry,
+};
+
 /// 
 pub async fn initialization_tables_sql(pool: &SQLitePool) { 
     query(
         "CREATE TABLE IF NOT EXISTS logs.life_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id UNSIGNED INTEGER PRIMARY KEY AUTOINCREMENT,
             tag TEXT NOT NULL,
-            payload TEXT ,
-            boot_timestamp INTEGER
+            payload TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            sesstion_id INTEGER NOT NULL,
+            level UNSIGNED INTEGER NOT NULL
         );"
     )
         .execute(pool)
@@ -45,7 +53,7 @@ pub async fn initialization_tables_sql(pool: &SQLitePool) {
 
     query(
         "CREATE TABLE IF NOT EXISTS globals (
-            globals_id INTEGER PRIMARY KEY,
+            globals_id UNSIGNED INTEGER PRIMARY KEY,
             value TEXT NOT NULL
         );"
     )
@@ -54,7 +62,7 @@ pub async fn initialization_tables_sql(pool: &SQLitePool) {
 
     query(
         "CREATE TABLE IF NOT EXISTS setting (
-            capability_id INTEGER PRIMARY KEY NOT NULL,
+            capability_id UNSIGNED INTEGER PRIMARY KEY NOT NULL,
             value TAXT NOT NULL
         );"
     )
@@ -63,11 +71,13 @@ pub async fn initialization_tables_sql(pool: &SQLitePool) {
 
     let (test_tag, test_payload) = (String::new(), String::new());
 
-    query("INSERT OR IGNORE INTO logs.life_logs(id, tag, payload, boot_timestamp) VALUES(?, ?, ?, ?)")
+    query("INSERT OR IGNORE INTO logs.life_logs(id, tag, payload, timestamp, sesstion_id, level) VALUES(?, ?, ?, ?, ?, ?)")
         .bind(0)
         .bind(test_tag)
         .bind(test_payload)
-        .bind(None)
+        .bind(-1)
+        .bind(-999)
+        .bind(999)
         .execute(pool)
         .await;
 
@@ -84,22 +94,39 @@ pub async fn initialization_tables_sql(pool: &SQLitePool) {
         .await;
 
     let tests = tokio::join!(
-        query_as("SELECT payload FROM logs.life_logs WHERE id = 0;")
+        query_as<LogEntry>("SELECT * FROM logs.life_logs WHERE id = 0;")
         .fetch_optional(pool)
         .await,
-        query_as("SELECT value FROM globals WHERE globals_id = 0;")
+        query_as<GlobalsEntry>("SELECT * FROM globals WHERE globals_id = 0;")
         .fetch_optional(pool)
         .await,
-        query_as("SELECT value FROM setting WHERE capability_id = 0;")
+        query_as<ConfigEntry>("SELECT * FROM setting WHERE capability_id = 0;")
         .fetch_optional(pool)
         .await,
     );
 
+    let log_test_struct = LogEntry {
+        id: 0,
+        tag: "tast_tag".to_string(),
+        payload: "test_payload".to_string(),
+        timestamp: -1,
+        sesstion_id: -999,
+        level: 999,
+    };
+    let globals_test_struct = GlobalsEntry {
+        globals_id: 0,
+        value: "test".to_string(),
+    };
+    let config_test_struct = ConfigEntry {
+        capability_id: 0,
+        value: "test".to_string(),
+    };
+
     match tests {
         (Ok(Some(test_log)), Ok(Some(test_globals)), Ok(Some(test_setting))) => {
-            assert_eq!(test_log.0, "test_payload");
-            assert_eq!(test_globals.0, "test");
-            assert_eq!(test_setting.0, "test");
+            assert_eq!(test_log, log_test_struct);
+            assert_eq!(test_globals, globals_test_struct);
+            assert_eq!(test_setting, config_test_struct);
         },
 
         _ => {

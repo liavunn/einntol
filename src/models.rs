@@ -19,6 +19,9 @@
 #![forbid(clippy::all)]
 
 /// 
+pub mod sql;
+
+/// 
 pub mod bundles_cli;
 
 /// 

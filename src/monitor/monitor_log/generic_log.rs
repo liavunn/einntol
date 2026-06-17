@@ -26,4 +26,4 @@ use crate::PipelineMessage;
 use crate::PipelineStatus;
 
 /// 
-pub 
+pub moniotr_fatal_error_log
