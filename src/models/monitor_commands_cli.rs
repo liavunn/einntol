@@ -17,9 +17,6 @@
 #![forbid(warnings)]
 #![forbid(clippy::pedantic)]
 #![forbid(clippy::all)]
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
 
 /// Represents commands sent from the user input to control monitoring tasks.
 pub enum MonitorCommandCLI {

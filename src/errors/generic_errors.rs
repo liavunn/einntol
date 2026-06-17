@@ -14,10 +14,6 @@
 
 //! Error types related ro file system operations.
 
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
-
 /// Generic error types.
 #[derive(thiserror::Error, Debug, miette::Diagnostic, Clone)]
 pub enum GenericError {

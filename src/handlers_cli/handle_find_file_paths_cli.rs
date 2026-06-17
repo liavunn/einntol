@@ -17,11 +17,8 @@
 #![deny(warnings)]
 #![deny(clippy::pedantic)]
 #![deny(clippy::all)]
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
 
-use tokio::sync::m::Receiver;
+use tokio::sync::mpsc::Receiver;
 
 use crate::models::generic_pipeline::{
     PipelineMessage,

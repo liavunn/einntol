@@ -17,9 +17,6 @@
 #![forbid(warnings)]
 #![forbid(clippy::pedantic)]
 #![forbid(clippy::all)]
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
 
 /// This struct is used to pass commands to the StateManager via channels.
 pub struct StateChange {

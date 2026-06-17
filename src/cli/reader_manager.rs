@@ -15,9 +15,6 @@
 //! Generic CLI Utilities.
 
 #![forbid(clippy::pedantic)]
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
 
 use tokio::sync::mpsc;
 use tokio::sync::watch;

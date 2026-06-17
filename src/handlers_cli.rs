@@ -17,9 +17,5 @@
 #![forbid(warnings)]
 #![forbid(clippy::pedantic)]
 #![forbid(clippy::all)]
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
-
  
 pub mod handle_find_file_paths_cli;

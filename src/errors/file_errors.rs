@@ -14,10 +14,6 @@
 
 //! Error types related ro file system operations.
 
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
-
 use std::path::PathBuf;
 
 /// Specific error information during file operations.

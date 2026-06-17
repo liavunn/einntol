@@ -17,11 +17,7 @@
 #![deny(warnings)]
 #![deny(clippy::pedantic)]
 #![deny(clippy::all)]
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
 
-use tokio::signal;
 use tokio::spawn;
 use tokio::sync::mpsc;
 use tokio::sync::watch;
@@ -71,13 +67,4 @@ pub async fn start_cli(
 
         );
     });
-
-    loop{
-        tokio::select! {
-            _ = signal::ctrl_c() => {
-                einntol_quit_signal.tx.send(true);
-                break;
-            }
-        }
-    }
 }

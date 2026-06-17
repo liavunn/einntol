@@ -16,9 +16,6 @@
 
 #![forbid(clippy::pedantic)]
 #![forbid(clippy::all)]
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
 
 use crate::errors::generic_errors::GenericError;
 use crate::errors::AppError;

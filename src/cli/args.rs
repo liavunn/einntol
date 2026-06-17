@@ -17,9 +17,6 @@
 #![forbid(warnings)]
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
 
 use std::collections::HashSet;
 use std::hash::BuildHasherDefault;
@@ -34,27 +31,27 @@ use crate::errors::AppError;
 #[derive(clap::Parser, Debug)]
 #[command(version = "1.0", about = "EinnTol")]
 pub struct Args {
-    /// 
-    #[arg(long = "globals", default_value = "config/globals.db")]
-    pub globals_path_sql: PathBuf,
-
-    /// 
-    #[arg(long = "config-path", default_value = "config/configs.db")]
-    pub config_path_sql: PathBuf,
-
-    /// 
-    #[arg(long = "log-path", default_value = "log/life_logs.db")]
+    /// Log database path.
+    #[arg(long = "log-path", default_value = "log/life_logs.db", help = "Path to the log database")]
     pub log_path_sql: PathBuf,
 
-    /// 
-    #[arg(long = "external_config")]
-    pub external_config_toml: Option<PathBuf>,
+    /// Global configuration database path.
+    #[arg(long = "globals", default_value = "config/globals.db", help = "Global configuration database path")]
+    pub globals_path_sql: PathBuf,
 
-    /// 
-    #[arg(long)]
+    /// Configuration database path.
+    #[arg(long = "config-path", default_value = "config/configs.db", help = "Configuration database path")]
+    pub config_path_sql: PathBuf,
+
+    /// External user configuration path.
+    #[arg(long = "external_config-path", help = "External user configuration path")]
+    pub external_config_txt: Option<PathBuf>,
+
+    /// Debug mode.
+    #[arg(long, help = "Debug mode")]
     pub debug: Option<bool>,
 
-    /// 
-    #[arg(long = "last-chain", default_value_t = false)]
-    pub last_chain: bool,
+    /// Use last configuration.
+    #[arg(long = "last-config", default_value_t = false, help = "Use last configuration")]
+    pub last_config: bool,
 }

@@ -17,9 +17,6 @@
 #![deny(warnings)]
 #![deny(clippy::pedantic)]
 #![deny(clippy::all)]
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
 
 /// 
 pub mod file_modes;

@@ -14,10 +14,6 @@
 
 //! Global configuration modes and flag definitions.
 
-#![forbid(clippy::float_cmp)]
-#![forbid(clippy::as_conversions)]
-#![forbid(missing_docs)]
-
 use std::sync::Arc;
 
 bitflags::bitflags! {

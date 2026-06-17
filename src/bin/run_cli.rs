@@ -20,6 +20,7 @@
 #![forbid(clippy::float_cmp)]
 #![forbid(clippy::as_conversions)]
 #![forbid(missing_docs)]
+#![forbid(unsafe_code)]
 
 use std::thread::scope;
 use std::sync::Arc;
@@ -27,6 +28,7 @@ use std::sync::atomic::AtomicBool;
 use std::path::Path;
 
 use miette;
+use tokio::signal;
 use tokio::time::{sleep, Duration};
 use tokio::sync::mpsc::{channel};
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -49,6 +51,7 @@ async fn main() -> miette::Result<()> {
     let log_path = Path::new(args.log_path_sql);
     let globals_path = Path::new(args.globals_path_sql);
     let config_path = Path::new(args.config_path_sql);
+    let external_config_path = Path::new(args.external_config_path);
 
     let Some(log_path_dir) = log_path.parent() else {
         eprintln!("Error: log file path error!");
@@ -62,10 +65,16 @@ async fn main() -> miette::Result<()> {
         eprintln!("Error: config file path error");
         panic!();
     };
+    let Some(external_config_path_dir) = external_config_path.parent() else {
+        eprintln!("Error: external config file path error");
+        panic!();
+    };
 
+    // Create directory if missing.
     std::fs::create_dir_all(log_path_dir)?;
     std::fs::create_dir_all(globals_path_dir)?;
     std::fs::create_dir_all(config_path_dir)?;
+    std::fs::create_dir_all(external_config_path_dir)?;
 
     let log_path = args.log_path_sql.clone();
 
@@ -73,7 +82,7 @@ async fn main() -> miette::Result<()> {
         .filename(args.config_path_sql)
         .create_if_missing(true);
 
-    let pool = SQLitePoolOptions::new()
+    let pool_sql = SQLitePoolOptions::new()
         .after_connect(move |conn, _| {Box::pin(async move {
             let log_path_clone = log_path;
             let log_sql = format!("ATTACH DATABASE '{}' AS logs;", log_path_clone);
@@ -85,12 +94,12 @@ async fn main() -> miette::Result<()> {
         .connect_with(connect_options)
         .await?;
 
-    initialization_tables_sql(&pool);
+    initialization_tables_sql(&pool_sql);
 
     let (parser_channel_tx, parser_channel_rx) = channel::<String>(2048);
     let parser_channel = ParserChannelCLI {
         tx: parser_channel_tx,
-        rx: parser_channel_rx
+        rx: parser_channel_rx,
     };
 
     let (monitor_channel_tx, monitor_channel_rx) = channel::<MonitorCommandCLI>(2048);
@@ -124,6 +133,7 @@ async fn main() -> miette::Result<()> {
     };
 
     start_cli(
+        pool_sql,
         parser_channel,
         monitor_channel,
         einntol_quit_signal,
@@ -134,6 +144,10 @@ async fn main() -> miette::Result<()> {
 
     loop {
         tokio::select! {
+            _ = signal::ctrl_c() => {
+                einntol_quit_signal.tx.send(true);
+            }
+
             _ = einntol_quit_signal.rx.changed() => {
                 if *einntol_quit_signal.rx.borrow() {
                     println!("[EinnTol] Byebye!");
