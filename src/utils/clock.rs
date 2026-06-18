@@ -12,32 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Generic CLI Utilities.
+//! File CLI utilities.
 
+#![forbid(warnings)]
+#![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
 
-use tokio::spawn;
+use std::io;
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 
-use sqlx::query;
-use tokio::sync::mpsc::Sender;
-use tokio::sync::watch;
+use crate::AppError;
+use crate::FileMode;
+use crate::models::file_pipeline_data::FileResults;
 
-use crate::utils::clock::get_next_clock;
-use crate::models::sql::{
-    LogEntry,
-    GlobalsEntry,
-    Config,
-};
+/// Global logical clock for ordering events within a single session.
+pub static GLOBALS_CLOCK: AtomicU64 = AtomicU64::new(0);
 
-/// 
-pub async fn moniotr_fatal_error_log(err: io::Error) {
-    let fatal_error = LogEntry {
-        id: None,
-        tag: "FATAL_ERROR".to_string(),
-        payload: err,
-        timestamp: get_next_tick(),
-        sesstion_id: 
-    }
-    
-    panic!();
+/// Generates the next unique logical timestamp.
+pub fn get_next_tick() -> u64 {
+    GLOBALS_CLOCK.fetch_add(1, Ordering::SeqCst) + 1
 }

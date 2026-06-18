@@ -18,26 +18,12 @@
 
 use tokio::spawn;
 
-use sqlx::query;
+use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc::Sender;
 use tokio::sync::watch;
 
-use crate::utils::clock::get_next_clock;
-use crate::models::sql::{
-    LogEntry,
-    GlobalsEntry,
-    Config,
-};
+use crate::PipelineMessage;
+use crate::PipelineStatus;
 
 /// 
-pub async fn moniotr_fatal_error_log(err: io::Error) {
-    let fatal_error = LogEntry {
-        id: None,
-        tag: "FATAL_ERROR".to_string(),
-        payload: err,
-        timestamp: get_next_tick(),
-        sesstion_id: 
-    }
-    
-    panic!();
-}
+pub moniotr_fatal_error_log

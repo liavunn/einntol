@@ -18,6 +18,9 @@
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
 
+/// 
+pub mod clock;
+ 
 /// General CLI utilities.
 pub mod generic_utils_cli;
 

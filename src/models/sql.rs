@@ -19,12 +19,13 @@
 #![forbid(clippy::all)]
 
 use sqlx;
+use sqlx::query;
 
 /// Maps directly to the database log schema.
 #[derive(Debug, PartialEq,sqlx::FromRow)]
 pub struct LogEntry {
     /// Primary key.
-    pub id: i64,
+    pub id: Option<i64>,
 
     /// Log category identifier.
     pub tag: String,
@@ -42,6 +43,19 @@ pub struct LogEntry {
     pub level: i32,
 }
 
+impl LogEntry {
+    pub async fn save(&self, pool: &SQLitePool) {
+        query("INSERT INTO logs.life_logs (tag, payload, timestamp, seestion_id, level VALUES (?, ?, ?, ?, ?)")
+            .bind(self.tag)
+            .bind(self.payload)
+            .bind(self.timestamp)
+            .bind(self.sesstion_id)
+            .bind(self.level)
+            .execute(pool)
+            .await;
+    }
+}
+
 /// Maps directly to the database globals schema.
 pub struct GlobalsEntry {
     /// Globals configuration ID.
@@ -51,6 +65,16 @@ pub struct GlobalsEntry {
     pub value: String,
 }
 
+impl GlobalsEntry {
+    pub async fn save(&self, pool: &SQLitePool) {
+        query("INSERT INTO globals (tag, payload, timestamp, seestion_id, level VALUES (?, ?, ?, ?, ?)")
+            .bind(self.globals_id)
+            .bind(self.value)
+            .execute(pool)
+            .await;
+    }
+}
+
 /// Maps directly to the database config schema.
 pub struct ConfigEntry {
     /// Capability configuration ID.
@@ -58,5 +82,15 @@ pub struct ConfigEntry {
 
     /// Capability configuration Value.
     pub value: String,
+}
+
+impl ConfigEntry {
+    pub async fn save(&self, pool: &SQLitePool) {
+        query("INSERT INTO setting (tag, payload, timestamp, seestion_id, level VALUES (?, ?, ?, ?, ?)")
+            .bind(self.capability_id)
+            .bind(self.value)
+            .execute(pool)
+            .await;
+    }
 }
 

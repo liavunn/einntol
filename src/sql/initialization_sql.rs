@@ -49,29 +49,30 @@ pub async fn initialization_tables_sql(pool: &SQLitePool) {
         );"
     )
         .execute(pool)
-        .await;
+        .await?;
 
     query(
         "CREATE TABLE IF NOT EXISTS globals (
-            globals_id UNSIGNED INTEGER PRIMARY KEY,
+            globals_id UNSIGNED INTEGER PRIMARY KEY NOT NULL,
             value TEXT NOT NULL
         );"
     )
         .execute(pool)
-        .await;
+        .await?;
 
     query(
         "CREATE TABLE IF NOT EXISTS setting (
-            capability_id UNSIGNED INTEGER PRIMARY KEY NOT NULL,
+            capability_id TEXT PRIMARY KEY NOT NULL,
             value TAXT NOT NULL
         );"
     )
         .execute(pool)
-        .await;
+        .await?;
 
     let (test_tag, test_payload) = (String::new(), String::new());
 
-    query("INSERT OR IGNORE INTO logs.life_logs(id, tag, payload, timestamp, sesstion_id, level) VALUES(?, ?, ?, ?, ?, ?)")
+    query("INSERT OR IGNORE INTO logs.life_logs (id, tag, payload, timestamp, sesstion_id, level)
+           VALUES(?, ?, ?, ?, ?, ?)")
         .bind(0)
         .bind(test_tag)
         .bind(test_payload)
@@ -79,34 +80,34 @@ pub async fn initialization_tables_sql(pool: &SQLitePool) {
         .bind(-999)
         .bind(999)
         .execute(pool)
-        .await;
+        .await?;
 
-    query("INSERT OR IGNORE INTO globals(globals_id, value) VALUES(?, ?)")
+    query("INSERT OR IGNORE INTO globals (globals_id, value) VALUES(?, ?)")
         .bind(0)
         .bind(test)
         .execute(pool)
-        .await;
+        .await?;
 
-    query("INSERT OR IGNORE INTO setting(capability_id, value) VALUES(?, ?)")
-        .bind(0)
+    query("INSERT OR IGNORE INTO setting (capability_id, value) VALUES(?, ?)")
+        .bind("0")
         .bind(test)
         .execute(pool)
-        .await;
+        .await?;
 
     let tests = tokio::join!(
         query_as<LogEntry>("SELECT * FROM logs.life_logs WHERE id = 0;")
         .fetch_optional(pool)
-        .await,
+        .await?,
         query_as<GlobalsEntry>("SELECT * FROM globals WHERE globals_id = 0;")
         .fetch_optional(pool)
-        .await,
+        .await?,
         query_as<ConfigEntry>("SELECT * FROM setting WHERE capability_id = 0;")
         .fetch_optional(pool)
-        .await,
+        .await?,
     );
 
     let log_test_struct = LogEntry {
-        id: 0,
+        id: Some(0),
         tag: "tast_tag".to_string(),
         payload: "test_payload".to_string(),
         timestamp: -1,
@@ -134,4 +135,15 @@ pub async fn initialization_tables_sql(pool: &SQLitePool) {
             panic!();
         }
     }
+
+    query("INSERT INTO globals (globals_id, value) VALUES (?, ?)
+            ON CONFLICT(globals_id) DO UPDATE SET value =
+            CASE
+                CAST(value AS INTEGER) + 1 >= 4 THEN 1
+                CAST(value AS INTEGER) + 1
+            END;")
+        .bind(999)
+        .bind(1)
+        .execute(pool)
+        .await?;
 }
