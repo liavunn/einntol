@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Error types related ro file system operations.
+//! General error types.
 
 /// Generic error types.
 #[derive(thiserror::Error, Debug, miette::Diagnostic, Clone)]

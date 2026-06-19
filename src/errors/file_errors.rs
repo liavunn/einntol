@@ -17,7 +17,7 @@
 use std::path::PathBuf;
 
 /// Specific error information during file operations.
-#[derive(thiserror::Error, Debug, serde::Serialize, miette::Diagnostic, Clone)]
+#[derive(thiserror::Error, Debug, miette::Diagnostic, Clone)]
 #[Error("File error at {path:#?} : {error_type:#?}")]
 pub struct FileOperationError {
     /// Specific error type.

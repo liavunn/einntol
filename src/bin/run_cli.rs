@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The entry point of the Einntol CLI program, responsible for environment initialization.
+//! Initialize EinnTol CLI components (pipeline, interpreter, and SQLite) and trigger the main CLI workflow.
 
 #![deny(warnings)]
 #![deny(clippy::pedantic)]

@@ -12,13 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Global configuration modes and flag definitions.
+//! General-purpose macros for the EinnTol project.
 
 #![forbid(warnings)]
 #![forbid(clippy::pedantic)]
 #![forbid(clippy::all)]
 
-/// 
+/// Macros for implementing `Display` trait boilerplate.
+///
+/// # Usage
+/// ```
+/// impl_struct_debug_to_display(
+///     (struct name, field1, field2, [fields....])
+///     [...]
+/// );
+/// ```
 #[macro_export]
 macro_rules! impl_struct_debug_to_display {
     ($(($type_name:ty, $($field:ident),+)),* $(,)?) => {

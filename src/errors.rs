@@ -22,13 +22,13 @@
 /// Specialized error types for file system operations.
 pub mod file_errors;
 
-/// converting system errors into application errors.
+/// converting file system errors into application file errors.
 pub mod file_errors_conversion;
 
-/// 
+/// Generic error types.
 pub mod generic_errors;
 
-/// 
+/// converting system errors into application generic errors.
 pub mod generic_errors_conversion;
 
 // /// Represents a standardized error format for frontend or external interfaces.
@@ -39,6 +39,7 @@ pub mod generic_errors_conversion;
 //      /// The error masage.
 //      pub message: String,
 // }
+
 /// The top-level error type that aggregates all sub-module errors.
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum AppError {

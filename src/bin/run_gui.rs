@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The entry point of the Einntol GUI program, responsible for environment initialization.
+//! Initialize EinnTol GUI components (pipeline, interpreter, and SQLite) and trigger the main GUI workflow.
 
 #![deny(warnings)]
 #![deny(clippy::pedantic)]

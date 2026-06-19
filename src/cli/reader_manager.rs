@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Generic CLI Utilities.
+//! Consume stdin and dispatch to modules or capabilities.
 
 #![forbid(clippy::pedantic)]
 
