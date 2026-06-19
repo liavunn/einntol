@@ -78,6 +78,9 @@ pub mod sql;
 pub mod handlers_cli;
 
 /// 
+pub mod parser;
+
+/// 
 pub mod cli;
 
 /// 

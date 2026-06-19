@@ -14,13 +14,18 @@
 
 //! 
 
+#![forbid(warnings)]
 #![forbid(clippy::pedantic)]
-
-///
-pub mod args;
-
-///
-pub mod reader_manager;
+#![forbid(clippy::all)]
 
 /// 
-pub mod start_cli_logic;
+pub mod parser_models;
+
+/// 
+pub mod check;
+
+/// 
+pub mod parse;
+
+/// 
+pub mod parser_macro;
