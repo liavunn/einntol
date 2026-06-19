@@ -98,15 +98,7 @@ impl ParallelVisitor for FileVisitor {
                 let batch = mem::take(&mut self.errors_vec);
 
                 self.tx.blocking_send(PipelineMessage::Data(
-                    struct LogEntry {
-        id: i64,
-        tag: String,
-        payload: String,
-        boot_timastamp: i64,
-        sesstion_id: i32,
-        error_level: i32,
-    }
-    ResultOutcome::FileErrors(
+                    ResultOutcome::FileErrors(
                         FileResultErrors {
                             errors: batch,
                         }
