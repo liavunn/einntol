@@ -95,13 +95,13 @@ pub async fn initialization_tables_sql(pool: &SQLitePool) {
         .await?;
 
     let tests = tokio::join!(
-        query_as<LogEntry>("SELECT * FROM logs.life_logs WHERE id = 0;")
+        query_as::<LogEntry>("SELECT * FROM logs.life_logs WHERE id = 0;")
         .fetch_optional(pool)
         .await?,
-        query_as<GlobalsEntry>("SELECT * FROM globals WHERE globals_id = 0;")
+        query_as::<GlobalsEntry>("SELECT * FROM globals WHERE globals_id = 0;")
         .fetch_optional(pool)
         .await?,
-        query_as<ConfigEntry>("SELECT * FROM setting WHERE capability_id = 0;")
+        query_as::<ConfigEntry>("SELECT * FROM setting WHERE capability_id = 0;")
         .fetch_optional(pool)
         .await?,
     );

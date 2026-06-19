@@ -18,9 +18,6 @@
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
 
-/// Capability chain parsing.
-pub mod parser;
-
 /// File manipulation tools.
 pub mod file_tools;
 

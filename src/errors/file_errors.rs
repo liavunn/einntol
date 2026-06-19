@@ -36,7 +36,7 @@ impl From<FileError> for FileOperationError {
 }
 
 /// File-related error types.
-#[derive(thiserror::Error, , miette::Diagnostic, Clone, Debug)]
+#[derive(thiserror::Error, miette::Diagnostic, Clone, Debug)]
 pub enum FileError {
     /// The file at the specified path does not exist.
     #[error("The file not found.")]
