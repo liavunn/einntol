@@ -18,4 +18,7 @@
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
 
+use std::fs::File;
+use std::path::PathBuf;
 
+pub fn parser_statement(external_config_path: PathBuf) {}

@@ -18,4 +18,19 @@
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
 
+use logos::Logos;
 
+#[derive(Logos, Debug, PartialEq)]
+pub enum Token {
+    #[token("[")]
+    LeftBracket,
+
+    #[token("]")]
+    RightBracket,
+    
+    #[token(";")]
+    Semicolon,
+
+    #[regex(r"[a-zA-Z_][a-zA-Z0-9_]*", |lexer| lexer.slice().to_string())]
+    Ident(String),
+}
