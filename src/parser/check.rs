@@ -18,7 +18,70 @@
 #![forbid(clippy::all)]
 #![forbid(clippy::pedantic)]
 
-use std::fs::File;
+use std::fs::{self, File};
 use std::path::PathBuf;
 
-pub fn parser_statement(external_config_path: PathBuf) {}
+use crate::errors::AppError;
+use crate::utils::clock::get_next_tick;
+use crate::models::sql::{
+    LogEntry,
+    LogTag,
+};
+
+pub struct ParserStatement<'a> {
+    pub statement: Vec<&'a str>,
+    pub cursol: usize,
+}
+
+impl ParserStatement {
+    /// validate and split statements
+    ///
+    /// # Arguments
+    /// * external_config_path - Configuration file requiring validation and statement splitting.
+    ///
+    /// # Returns
+    /// Return a Vector containing string slices.
+    pub fn try_split_statements(external_config_path: PathBuf) -> Result<String, None> {
+        let content = fs::read_to_string(external_config_path);
+
+        let Ok(file_content) else {
+            let err = content.unwrap_err();
+            let app_err = AppError::from_io_file_error(Some(err), external_config_path, None);
+            let tag = LogTag::LifeError("LIFE_ERROR".to_string);
+            let sesstion_id = query("SELECT value FROM globals WHERE globals_id = 999");
+
+            let log = LogEntry {
+                id: None,
+                tag: tag.to_string(),
+                payload: app_err.to_string(),
+                timestamp: get_next_tick(),
+                sesstion_id,
+                level: 1
+            };
+
+            LogEntry::save(&log, pool);
+
+            return Err(None)
+        };
+
+        let real_content = file_content
+            .line()
+            .filter(|line| !line.trim().starts_whit("#") && !line.trim().is_empty())
+            .collect();
+
+        if real_content.is_empty() {
+            return Err(None);
+        }
+
+        let real_content_vec = real_content.split(";").collect();
+
+        Ok(real_content_vec)
+    }
+
+    /// 
+    pub fn parse(&mut self, pool: &SQLitePool, content: String, external_config_path: PathBuf) -> Result<Vec<str>, AppError> {
+        |||
+    }
+
+}
+

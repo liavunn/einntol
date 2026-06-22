@@ -34,13 +34,45 @@ pub struct LogEntry {
     pub payload: String,
 
     /// Logical clock value.
-    pub timestamp: i64,
+    pub timestamp: u64,
 
     /// Unique session identifier for windowing.
     pub sesstion_id: i32,
 
     /// Severity level.
     pub level: i32,
+}
+
+pub enum LogTag {
+    /// Program Heartbeat Started.
+    LifeBirth(String),
+
+    /// Heartbeat running.
+    Life(String),
+
+    /// Heartbeat stopped.
+    LifeEnd(String),
+
+    /// Module heartbeat started.
+    LifeFuncStrat(String),
+
+    /// Module heartbeat running.
+    LifeFunc(String),
+
+    ///Module heartbeat terminated.
+    LifeFuncEnd(String),
+
+    /// Heartbeat timeout.
+    LifeDead(String),
+
+    /// Module heartbeat timeout.
+    LifeFuncDead(String),
+
+    /// Fatal error.
+    LifeFatal(String),
+
+    /// Non-fatal error.
+    LifeError(String),
 }
 
 impl LogEntry {

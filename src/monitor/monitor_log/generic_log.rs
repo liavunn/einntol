@@ -36,7 +36,7 @@ pub async fn moniotr_fatal_error_log(err: io::Error) {
         tag: "FATAL_ERROR".to_string(),
         payload: err,
         timestamp: get_next_tick(),
-        sesstion_id: 
+        sesstion_id:
     }
     
     panic!();
