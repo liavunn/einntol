@@ -12,44 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! 
+//! Global configuration modes and flag definitions.
 
 #![forbid(warnings)]
 #![forbid(clippy::pedantic)]
 #![forbid(clippy::all)]
 
-/// 
-pub mod sql{
-    /// 
-    pub mod log;
+use sqlx;
+use sqlx::query;
 
-    ///
-    pub mod globals;
 
-    ///
-    pub mod setting;
+/// Maps directly to the database globals schema.
+pub struct GlobalsEntry {
+    /// Globals configuration ID.
+    pub globals_id: i64,
+
+    /// Globals configuration Value.
+    pub value: String,
 }
 
-/// 
-pub mod bundles_cli;
-
-/// 
-pub mod generic_bundles;
-
-/// 
-pub mod monitor_commands_cli;
-
-/// 
-pub mod state_signal;
-
-/// 
-pub mod generic_pipeline;
-
-/// 
-pub mod pipeline_outcome;
-
-/// 
-pub mod file_pipeline_data;
-
-/// 
-pub mod parser_pipeline_data;
+impl GlobalsEntry {
+    pub async fn save(&self, pool: &SQLitePool) {
+        query("INSERT INTO globals (tag, payload, timestamp, seestion_id, level VALUES (?, ?, ?, ?, ?)")
+            .bind(self.globals_id)
+            .bind(self.value)
+            .execute(pool)
+            .await;
+    }
+}

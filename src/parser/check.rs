@@ -21,19 +21,22 @@
 use std::fs::{self, File};
 use std::path::PathBuf;
 
+use sqlx;
+
 use crate::errors::AppError;
 use crate::utils::clock::get_next_tick;
-use crate::models::sql::{
+use crate::parser::parser_models::Token;
+use crate::models::sql::log::{
     LogEntry,
     LogTag,
 };
 
-pub struct ParserStatement<'a> {
+pub struct ParserTokens<'a> {
     pub statement: Vec<&'a str>,
     pub cursol: usize,
 }
 
-impl ParserStatement {
+impl ParserTokens {
     /// validate and split statements
     ///
     /// # Arguments
@@ -48,7 +51,7 @@ impl ParserStatement {
             let err = content.unwrap_err();
             let app_err = AppError::from_io_file_error(Some(err), external_config_path, None);
             let tag = LogTag::LifeError("LIFE_ERROR".to_string);
-            let sesstion_id = query("SELECT value FROM globals WHERE globals_id = 999");
+            let sesstion_id = query!("SELECT value FROM globals WHERE globals_id = 999");
 
             let log = LogEntry {
                 id: None,
@@ -56,7 +59,7 @@ impl ParserStatement {
                 payload: app_err.to_string(),
                 timestamp: get_next_tick(),
                 sesstion_id,
-                level: 1
+                level: 1,
             };
 
             LogEntry::save(&log, pool);
@@ -79,8 +82,8 @@ impl ParserStatement {
     }
 
     /// 
-    pub fn parse(&mut self, pool: &SQLitePool, content: String, external_config_path: PathBuf) -> Result<Vec<str>, AppError> {
-        |||
+    pub fn statement_tokens(statements: Vec<&str>) -> Result<, AppError> {
+        let lexer = Token::lexer();
     }
 
 }

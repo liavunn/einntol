@@ -16,8 +16,12 @@
 
 #![forbid(clippy::pedantic)]
 
+/// 
 pub mod generic_monitor_cli{
+    /// 
     pub mod signal_monitor_cli;
+
+    /// 
     pub mod state_manager;
 }
 
