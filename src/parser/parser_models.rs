@@ -31,6 +31,37 @@ pub enum Token {
     #[token(";")]
     Semicolon,
 
+    #[regex(r"[@\w+]", |leser| lexer.slice().Types::into(), priority = 3)]
+    Type(Types),
+
     #[regex(r"[a-zA-Z_][a-zA-Z0-9_]*", |lexer| lexer.slice().to_string())]
     Ident(String),
+
+    #[token("end")]
+    End,
+}
+
+pub enum Types {
+    /// A text stream.
+    String,
+
+    /// A integral value, limits loop iterations or parameters.
+    Integer,
+
+    /// Boolean value, parameter.
+    Bool,
+
+    /// Immutable constant.
+    Const,
+}
+
+impl Types {
+    pub fn into(input_type: &str) {
+        match input_type {
+            "String" => Types::String,
+            "Integer" => Types::Integer,
+            "Bool" => Types::Bool,
+            "Const" => Types::Const,
+        };
+    }
 }

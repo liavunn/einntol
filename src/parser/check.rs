@@ -84,6 +84,12 @@ impl ParserTokens {
     /// 
     pub fn statement_tokens(statements: Vec<&str>) -> Result<, AppError> {
         let lexer = Token::lexer();
+
+        while let current_token = lexer {
+            match current_token {
+                Token::
+            }
+        }
     }
 
 }
