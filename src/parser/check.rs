@@ -22,6 +22,7 @@ use std::fs::{self, File};
 use std::path::PathBuf;
 
 use sqlx;
+use logos::Logos;
 
 use crate::errors::AppError;
 use crate::utils::clock::get_next_tick;
@@ -83,11 +84,11 @@ impl ParserTokens {
 
     /// 
     pub fn statement_tokens(statements: Vec<&str>) -> Result<, AppError> {
-        let lexer = Token::lexer();
+        let mut lexer = Token::lexer();
 
-        while let current_token = lexer {
+        while let Some(current_token) = lexer.next() {
             match current_token {
-                Token::
+                Ok(Token::LeftBracket) => todo(),
             }
         }
     }

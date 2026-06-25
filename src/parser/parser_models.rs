@@ -27,11 +27,8 @@ pub enum Token {
 
     #[token("]")]
     RightBracket,
-    
-    #[token(";")]
-    Semicolon,
 
-    #[regex(r"[@\w+]", |leser| lexer.slice().Types::into(), priority = 3)]
+    #[regex(r"[@\w+]", |leser| Types::into(lexer.slice()), priority = 3)]
     Type(Types),
 
     #[regex(r"[a-zA-Z_][a-zA-Z0-9_]*", |lexer| lexer.slice().to_string())]
@@ -53,15 +50,23 @@ pub enum Types {
 
     /// Immutable constant.
     Const,
+
+    /// Type error.
+    Error(String),
 }
 
 impl Types {
-    pub fn into(input_type: &str) {
+    pub fn into(input_type: &str) -> Self {
         match input_type {
-            "String" => Types::String,
-            "Integer" => Types::Integer,
-            "Bool" => Types::Bool,
-            "Const" => Types::Const,
-        };
+            "@String" => Types::String,
+
+            "@Integer" => Types::Integer,
+
+            "@Bool" => Types::Bool,
+
+            "@Const" => Types::Const,
+
+            _ => Types::Error(input_type.to_string()),
+        }
     }
 }
