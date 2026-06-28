@@ -15,20 +15,20 @@
 //! 
 
 #![forbid(warnings)]
-#![forbid(clippy::pedantic)]
 #![forbid(clippy::all)]
+#![forbid(clippy::pedantic)]
+
+use crate::parser::lexer_models::Types;
 
 /// 
-pub mod lexer_models;
+pub struct Variable {
+    var_name: String,
+    var_type: Option<Types>,
+}
 
 /// 
-pub mod runtime_models;
+pub enum ActionName {
+    LetVar(Variable),
 
-/// 
-pub mod check;
-
-/// 
-pub mod parse;
-
-/// 
-pub mod parser_macro;
+    DropVar(Variable)
+}

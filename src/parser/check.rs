@@ -83,15 +83,46 @@ impl ParserTokens {
     }
 
     /// 
-    pub fn statement_tokens(statements: Vec<&str>) -> Result<, AppError> {
-        let mut lexer = Token::lexer();
+    pub fn statement_tokens(statements: Vec<&str>) -> Result<Vec<String>, None> {
+        let stack: Vec<Vec<String>> = Vec::new();
 
-        while let Some(current_token) = lexer.next() {
-            match current_token {
-                Ok(Token::LeftBracket) => todo(),
+        let execution_table = Vec::new();
+
+        for statement in statements {
+            let mut lexer = Token::lexer(statement);
+
+            while let Some(current_token) = lexer.next() {
+                match current_token {
+                    Ok(token) => {
+                        match token {
+                            Token::LeftBracket => {
+                                stack.push(Vec::new());
+                            },
+
+                            Token::RightBracket => {
+                                if stack.is_empty() {
+                                    return Err(None);
+                                }
+                            },
+
+                            Token::Type(ty) => todo(),
+
+                            Token::Ident(text) => {
+                                if stack.is_empty() {
+                                    s
+                                } 
+                            },
+
+                            Token::End => |||,
+                        }
+                    },
+
+                    Err(_) => return Err(None),
+                }
             }
         }
-    }
 
+        Ok(execution_table)
+    }
 }
 
